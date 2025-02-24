@@ -11,10 +11,10 @@ from columns import (
     ResalePrice,
 )
 
-from column_preprocess import CategoricalEncoder
+from column_preprocess import ZoneMapping, CategoricalEncoder
 
 
-class ResalePriceDataEncoded:
+class ResalePriceDataCombined:
     def __init__(self):
         self.month = Month()  # Querying
         self.town = TownEncoded()  # Querying
@@ -55,6 +55,10 @@ class ResalePriceDataEncoded:
         self.town_encoder = CategoricalEncoder("town", self.town.towns)
         self.town.towns = self.town_encoder.transform(self.town.towns)
 
+    def create_zone_map(self, num_zones):
+        self.floor_area_sqm_zone_map = ZoneMapping("floor_area_sqm", num_zones)
+        self.floor_area_sqm_zone_map.fit(self.floor_area_sqm.areas)
+
     def __str__(self):
         return (
             f"Months: {self.month.months}\n"
@@ -74,11 +78,21 @@ class ResalePriceDataEncoded:
         min_price = float("inf")
 
         # start with area
-        area_position_match = []
-        for i, area in enumerate(self.floor_area_sqm.areas):
-            if area >= 80:
-                area_position_match.append(i)
+        area_position_zones = []
+        for i, j in self.floor_area_sqm_zone_map.zones.items():
+            if j[1] >= 80:
+                area_position_zones.append(i)
 
+        area_position_match = []
+        for i in area_position_zones:
+            start_index = i * self.floor_area_sqm_zone_map.rows_per_zone
+            end_index = min(
+                (i + 1) * self.floor_area_sqm_zone_map.rows_per_zone,
+                len(self.floor_area_sqm.areas),
+            )
+            for j in range(start_index, end_index):
+                if self.floor_area_sqm.areas[j] >= 80:
+                    area_position_match.append(j)
         # month
         month_position_match = []
         for i in area_position_match:
@@ -110,10 +124,21 @@ class ResalePriceDataEncoded:
     # Standard Deviation of Price
     def sd_price(self, year, month, town):
         # start with area
+        area_position_zones = []
+        for i, j in self.floor_area_sqm_zone_map.zones.items():
+            if j[1] >= 80:
+                area_position_zones.append(i)
+
         area_position_match = []
-        for i, area in enumerate(self.floor_area_sqm.areas):
-            if area >= 80:
-                area_position_match.append(i)
+        for i in area_position_zones:
+            start_index = i * self.floor_area_sqm_zone_map.rows_per_zone
+            end_index = min(
+                (i + 1) * self.floor_area_sqm_zone_map.rows_per_zone,
+                len(self.floor_area_sqm.areas),
+            )
+            for j in range(start_index, end_index):
+                if self.floor_area_sqm.areas[j] >= 80:
+                    area_position_match.append(j)
 
         # month
         month_position_match = []
@@ -147,10 +172,21 @@ class ResalePriceDataEncoded:
     # Average Price
     def avg_price(self, year, month, town):
         # start with area
+        area_position_zones = []
+        for i, j in self.floor_area_sqm_zone_map.zones.items():
+            if j[1] >= 80:
+                area_position_zones.append(i)
+
         area_position_match = []
-        for i, area in enumerate(self.floor_area_sqm.areas):
-            if area >= 80:
-                area_position_match.append(i)
+        for i in area_position_zones:
+            start_index = i * self.floor_area_sqm_zone_map.rows_per_zone
+            end_index = min(
+                (i + 1) * self.floor_area_sqm_zone_map.rows_per_zone,
+                len(self.floor_area_sqm.areas),
+            )
+            for j in range(start_index, end_index):
+                if self.floor_area_sqm.areas[j] >= 80:
+                    area_position_match.append(j)
 
         # month
         month_position_match = []
@@ -185,10 +221,21 @@ class ResalePriceDataEncoded:
         min_price_per_sqm = float("inf")
 
         # start with area
+        area_position_zones = []
+        for i, j in self.floor_area_sqm_zone_map.zones.items():
+            if j[1] >= 80:
+                area_position_zones.append(i)
+
         area_position_match = []
-        for i, area in enumerate(self.floor_area_sqm.areas):
-            if area >= 80:
-                area_position_match.append(i)
+        for i in area_position_zones:
+            start_index = i * self.floor_area_sqm_zone_map.rows_per_zone
+            end_index = min(
+                (i + 1) * self.floor_area_sqm_zone_map.rows_per_zone,
+                len(self.floor_area_sqm.areas),
+            )
+            for j in range(start_index, end_index):
+                if self.floor_area_sqm.areas[j] >= 80:
+                    area_position_match.append(j)
 
         # month
         month_position_match = []

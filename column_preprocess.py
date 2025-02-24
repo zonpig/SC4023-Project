@@ -29,18 +29,18 @@ class ZoneMapping:
         Args:
             col_name: str
             num_zones: int, number of zones to divide
-            bin_method: str, to be either width or depth
-
         """
         self.col_name = col_name
         self.num_zones = num_zones
+        self.rows_per_zone = None
+        self.zones = {}
 
     def fit(self, data):
         N = len(data)
-        rows_per_zone = N // self.num_zones
+        self.rows_per_zone = N // self.num_zones
         zones = []
-        for i in range(0, N, rows_per_zone):
-            zone_vals = data[i : min(N, i + rows_per_zone)]
+        for i in range(0, N, self.rows_per_zone):
+            zone_vals = data[i : min(N, i + self.rows_per_zone)]
             min_val, max_val = min(zone_vals), max(zone_vals)
             zones.append([min_val, max_val])
         self.zones = {k: v for k, v in enumerate(zones)}
