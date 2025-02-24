@@ -3,10 +3,11 @@ import csv
 
 class Month:
     def __init__(self):
-        self.months: list[str] = []
+        self.months: list[dict[str, int]] = []
 
     def add_month(self, month: str):
-        self.months.append(month)
+        year, month = map(int, month.split("-"))
+        self.months.append({"year": year, "month": month})
 
 
 class Town:
@@ -81,6 +82,20 @@ class ResalePrice:
         self.prices.append(price)
 
 
+town_map = {
+    0: "BEDOK",
+    1: "BUKIT PANJANG",
+    2: "CLEMENTI",
+    3: "CHOA CHU KANG",
+    4: "HOUGANG",
+    5: "JURONG WEST",
+    6: "PASIR RIS",
+    7: "TAMPINES",
+    8: "WOODLANDS",
+    9: "YISHUN",
+}
+
+
 class ResalePriceData:
     def __init__(self):
         self.month = Month()
@@ -132,6 +147,49 @@ class ResalePriceData:
             f"Resale Prices: {self.resale_price.prices}\n"
         )
 
+    def min_price(self, matric_number: str):
+        year = int(matric_number[-2])
+        month = int(matric_number[-3])
+        town_index = int(matric_number[-4])
+        town = town_map[town_index]
+
+        min_price = float("inf")
+
+        # start with area
+        area_position_match = []
+        for i, area in enumerate(self.floor_area_sqm.areas):
+            if area >= 80:
+                area_position_match.append(i)
+
+        # month
+        month_position_match = []
+        for i in area_position_match:
+            if (
+                self.month.months[i]["month"] == month
+                or self.month.months[i]["month"] == month + 1
+            ):
+                print(self.month.months[i])
+                month_position_match.append(i)
+
+        # year
+        year_position_match = []
+        for i in month_position_match:
+            if self.month.months[i]["year"] % 10 == year:
+                year_position_match.append(i)
+
+        # town
+        town_position_match = []
+        for i in year_position_match:
+            if self.town.towns[i] == town:
+                town_position_match.append(i)
+
+        # price
+        for i in town_position_match:
+            if self.resale_price.prices[i] < min_price:
+                min_price = self.resale_price.prices[i]
+
+        return min_price if min_price != float("inf") else None
+
 
 def read_csv(file_path):
     resale_data = ResalePriceData()
@@ -154,8 +212,35 @@ def read_csv(file_path):
     return header, resale_data
 
 
-file_path = "ResalePricesSingapore.csv"
-header, data = read_csv(file_path)
+# You are expected to write a program to manage the data in a column-oriented manner,
+# including data storage and processing. Your program should first receive queries, scan
+# the data columns to find matched lines, and compute the results according to associated
+# query content. To be specific, a query is composed of a target time (YYYY-MM to YYYY-
+# (MM+1)), a matched town, and a query content. These factors are determined by your
+# matriculation number as follows:
+# a) The last digit of the year of the target time (YYYY) equals the last digit of the matriculation number;
+# b) the commencing month (MM) equals the second last digit of the matriculation number (note that “0" represents October);
+# c) the matched town depends on the third last digit of the matriculation number as Table 1 presents;
+# d) there are four query contents in total that are listed in Table 2, and the area requirement (≥80m2) is applicable to all these contents.
+# the area requirement (≥80m2) is applicable to all these contents
 
-print("Header:", header)
-print("Data:", data)
+# Minimum Price
+# Standard Deviation of Price
+# Average Price
+# Minimum Price per Square Meter
+
+
+def main():
+    file_path = "ResalePricesSingapore.csv"
+    header, data = read_csv(file_path)
+
+    # print("Header:", header)
+    # print("Data:", data)
+
+    # matric number
+    matric_number = "U2121223J"
+    print(data.min_price(matric_number))
+
+
+if __name__ == "__main__":
+    main()
