@@ -95,6 +95,19 @@ town_map = {
     9: "YISHUN",
 }
 
+year_map = {
+    0: 2020,
+    1: 2021,
+    2: 2022,
+    3: 2023,
+    4: 2014,
+    5: 2015,
+    6: 2016,
+    7: 2017,
+    8: 2018,
+    9: 2019,
+}
+
 
 class ResalePriceData:
     def __init__(self):
@@ -147,12 +160,8 @@ class ResalePriceData:
             f"Resale Prices: {self.resale_price.prices}\n"
         )
 
-    def min_price(self, matric_number: str):
-        year = int(matric_number[-2])
-        month = int(matric_number[-3])
-        town_index = int(matric_number[-4])
-        town = town_map[town_index]
-
+    # Minimum Price
+    def min_price(self, year, month, town):
         min_price = float("inf")
 
         # start with area
@@ -168,13 +177,12 @@ class ResalePriceData:
                 self.month.months[i]["month"] == month
                 or self.month.months[i]["month"] == month + 1
             ):
-                print(self.month.months[i])
                 month_position_match.append(i)
 
         # year
         year_position_match = []
         for i in month_position_match:
-            if self.month.months[i]["year"] % 10 == year:
+            if self.month.months[i]["year"] == year:
                 year_position_match.append(i)
 
         # town
@@ -188,7 +196,123 @@ class ResalePriceData:
             if self.resale_price.prices[i] < min_price:
                 min_price = self.resale_price.prices[i]
 
-        return min_price if min_price != float("inf") else None
+        return min_price if min_price != float("inf") else "No result"
+
+    # Standard Deviation of Price
+    def sd_price(self, year, month, town):
+        # start with area
+        area_position_match = []
+        for i, area in enumerate(self.floor_area_sqm.areas):
+            if area >= 80:
+                area_position_match.append(i)
+
+        # month
+        month_position_match = []
+        for i in area_position_match:
+            if (
+                self.month.months[i]["month"] == month
+                or self.month.months[i]["month"] == month + 1
+            ):
+                month_position_match.append(i)
+
+        # year
+        year_position_match = []
+        for i in month_position_match:
+            if self.month.months[i]["year"] == year:
+                year_position_match.append(i)
+
+        # town
+        town_position_match = []
+        for i in year_position_match:
+            if self.town.towns[i] == town:
+                town_position_match.append(i)
+
+        # price
+        prices = [self.resale_price.prices[i] for i in town_position_match]
+        if not prices:
+            return "No result"
+        mean_price = sum(prices) / len(prices)
+        variance = sum((price - mean_price) ** 2 for price in prices) / len(prices)
+        return round(variance**0.5, 2)
+
+    # Average Price
+    def avg_price(self, year, month, town):
+        # start with area
+        area_position_match = []
+        for i, area in enumerate(self.floor_area_sqm.areas):
+            if area >= 80:
+                area_position_match.append(i)
+
+        # month
+        month_position_match = []
+        for i in area_position_match:
+            if (
+                self.month.months[i]["month"] == month
+                or self.month.months[i]["month"] == month + 1
+            ):
+                month_position_match.append(i)
+
+        # year
+        year_position_match = []
+        for i in month_position_match:
+            if self.month.months[i]["year"] == year:
+                year_position_match.append(i)
+
+        # town
+        town_position_match = []
+        for i in year_position_match:
+            if self.town.towns[i] == town:
+                town_position_match.append(i)
+
+        # price
+        prices = [self.resale_price.prices[i] for i in town_position_match]
+        if not prices:
+            return "No Results"
+        mean_price = sum(prices) / len(prices)
+        return round(mean_price, 2)
+
+    # Minimum Price per Square Meter
+    def min_price_per_sqm(self, year, month, town):
+        min_price_per_sqm = float("inf")
+
+        # start with area
+        area_position_match = []
+        for i, area in enumerate(self.floor_area_sqm.areas):
+            if area >= 80:
+                area_position_match.append(i)
+
+        # month
+        month_position_match = []
+        for i in area_position_match:
+            if (
+                self.month.months[i]["month"] == month
+                or self.month.months[i]["month"] == month + 1
+            ):
+                month_position_match.append(i)
+
+        # year
+        year_position_match = []
+        for i in month_position_match:
+            if self.month.months[i]["year"] == year:
+                year_position_match.append(i)
+
+        # town
+        town_position_match = []
+        for i in year_position_match:
+            if self.town.towns[i] == town:
+                town_position_match.append(i)
+
+        # price
+        for i in town_position_match:
+            price_per_sqm = self.resale_price.prices[i] / self.floor_area_sqm.areas[i]
+            if price_per_sqm < min_price_per_sqm:
+                min_price_per_sqm = price_per_sqm
+
+        return (
+            round(min_price_per_sqm, 2)
+            if min_price_per_sqm != float("inf")
+            else "No result"
+        )
 
 
 def read_csv(file_path):
@@ -224,11 +348,6 @@ def read_csv(file_path):
 # d) there are four query contents in total that are listed in Table 2, and the area requirement (≥80m2) is applicable to all these contents.
 # the area requirement (≥80m2) is applicable to all these contents
 
-# Minimum Price
-# Standard Deviation of Price
-# Average Price
-# Minimum Price per Square Meter
-
 
 def main():
     file_path = "ResalePricesSingapore.csv"
@@ -239,7 +358,43 @@ def main():
 
     # matric number
     matric_number = "U2121223J"
-    print(data.min_price(matric_number))
+
+    last_digit_year = int(matric_number[-2])
+    year = year_map[last_digit_year]
+    month = int(matric_number[-3])
+    town_index = int(matric_number[-4])
+    town = town_map[town_index]
+
+    print(data.min_price(year, month, town))
+    print(data.sd_price(year, month, town))
+    print(data.avg_price(year, month, town))
+    print(data.min_price_per_sqm(year, month, town))
+
+    categories = [
+        ("Minimum Price", data.min_price),
+        ("Standard Deviation of Price", data.sd_price),
+        ("Average Price", data.avg_price),
+        ("Minimum Price per Square Meter", data.min_price_per_sqm),
+    ]
+
+    results = [
+        {
+            "Year": year,
+            "Month": month,
+            "Town": town,
+            "Category": category,
+            "Value": func(year, month, town),
+        }
+        for category, func in categories
+    ]
+
+    with open(f"ScanResult_{matric_number}.csv", mode="w", newline="") as file:
+        writer = csv.DictWriter(
+            file, fieldnames=["Year", "Month", "Town", "Category", "Value"]
+        )
+        writer.writeheader()
+        for result in results:
+            writer.writerow(result)
 
 
 if __name__ == "__main__":
