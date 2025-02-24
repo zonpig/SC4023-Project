@@ -1,7 +1,8 @@
 class CategoricalEncoder:
-    def __init__(self, col_name):
+    def __init__(self, col_name, data):
         self.col_name = col_name
-    
+        self.mappings = self._fit_transform(data)
+        
     def fit(self,data):
         unique_vals = set(data)
         # e.g. bedok:0
@@ -10,7 +11,7 @@ class CategoricalEncoder:
     def transform(self,data):
         return [self.mappings[value] for value in data]
     
-    def fit_transform(self,data):
+    def _fit_transform(self,data):
         '''
         Args: 
             data: list, original column store
