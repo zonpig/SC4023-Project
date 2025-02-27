@@ -141,8 +141,9 @@ class ResalePriceDataEncoded:
         if not prices:
             return "No result"
         mean_price = sum(prices) / len(prices)
-        variance = sum((price - mean_price) ** 2 for price in prices) / len(prices)
-        return round(variance**0.5, 2)
+        variance = sum((price - mean_price) ** 2 for price in prices) / (
+            len(prices) - 1
+        )        return round(variance**0.5, 2)
 
     # Average Price
     def avg_price(self, year, month, town):

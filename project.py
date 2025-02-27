@@ -187,31 +187,31 @@ def main():
     print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
 
     # Output Code
-    # categories = [
-    #     ("Minimum Price", column_store.min_price),
-    #     ("Standard Deviation of Price", column_store.sd_price),
-    #     ("Average Price", column_store.avg_price),
-    #     ("Minimum Price per Square Meter", column_store.min_price_per_sqm),
-    # ]
+    categories = [
+        ("Minimum Price", column_store.min_price),
+        ("Standard Deviation of Price", column_store.sd_price),
+        ("Average Price", column_store.avg_price),
+        ("Minimum Price per Square Meter", column_store.min_price_per_sqm),
+    ]
 
-    # results = [
-    #     {
-    #         "Year": year,
-    #         "Month": month,
-    #         "Town": town,
-    #         "Category": category,
-    #         "Value": func(year, month, town),
-    #     }
-    #     for category, func in categories
-    # ]
+    results = [
+        {
+            "Year": year,
+            "Month": month,
+            "Town": town,
+            "Category": category,
+            "Value": func(year, month, town),
+        }
+        for category, func in categories
+    ]
 
-    # with open(f"ScanResult_{matric_number}.csv", mode="w", newline="") as file:
-    #     writer = csv.DictWriter(
-    #         file, fieldnames=["Year", "Month", "Town", "Category", "Value"]
-    #     )
-    #     writer.writeheader()
-    #     for result in results:
-    #         writer.writerow(result)
+    with open(f"ScanResult_{matric_number}.csv", mode="w", newline="") as file:
+        writer = csv.DictWriter(
+            file, fieldnames=["Year", "Month", "Town", "Category", "Value"]
+        )
+        writer.writeheader()
+        for result in results:
+            writer.writerow(result)
 
 
 if __name__ == "__main__":
