@@ -45,18 +45,19 @@ def read_csv(file_path: str, type: int):
         csv_reader = csv.reader(file)
         _ = next(csv_reader)
         for row in csv_reader:
-            resale_data.add_data(
-                month=row[0],
-                town=row[1],
-                flat_type=row[2],
-                block=row[3],
-                street_name=row[4],
-                storey_range=row[5],
-                floor_area_sqm=float(row[6]),
-                flat_model=row[7],
-                lease_commence_date=int(row[8]),
-                resale_price=float(row[9]),
-            )
+            resale_data.add_data(row)
+            # resale_data.add_data(
+            #     month=row[0],
+            #     town=row[1],
+            #     flat_type=row[2],
+            #     block=row[3],
+            #     street_name=row[4],
+            #     storey_range=row[5],
+            #     floor_area_sqm=float(row[6]),
+            #     flat_model=row[7],
+            #     lease_commence_date=int(row[8]),
+            #     resale_price=float(row[9]),
+            # )
     return resale_data
 
 

@@ -1,87 +1,97 @@
-class Month:
+from typing import List, Union
+from abc import abstractmethod
+
+class BaseColumn:
+
+    @abstractmethod
+    def add_data(self, val):
+        pass
+    
+class Month(BaseColumn):
     def __init__(self):
-        self.months: list[dict[str, int]] = []
+        super().__init__()
+        self.data: list[dict[str, int]] = []
 
-    def add_month(self, month: str):
-        year, month = map(int, month.split("-"))
-        self.months.append({"year": year, "month": month})
+    def add_data(self, val: str):
+        year, month = map(int, val.split("-"))
+        self.data.append({"year": year, "month": month})
 
-
-class Town:
+class Town(BaseColumn):
     def __init__(self):
-        self.towns: list[str] = []
+        super().__init__()
+        self.data: List[str] = []
 
-    def add_town(self, name: str):
-        self.towns.append(name)
+    def add_data(self, val: str):
+        self.data.append(val)
 
-
-class TownEncoded:
+class TownEncoded(BaseColumn):
     def __init__(self):
-        self.towns: list[str | int] = []
+        super().__init__()
+        self.data: List[Union[str, int]] = []
 
-    def add_town(self, name: str | int):
-        self.towns.append(name)
+    def add_data(self, val: Union[str, int]):
+        self.data.append(val)
 
-
-class FlatType:
+class FlatType(BaseColumn):
     def __init__(self):
-        self.types: list[str] = []
+        super().__init__()
+        self.data: List[str] = []
 
-    def add_type(self, type: str):
-        self.types.append(type)
+    def add_data(self, val: str):
+        self.data.append(val)
 
-
-class Block:
+class Block(BaseColumn):
     def __init__(self):
-        self.blocks: list[str] = []
+        super().__init__()
+        self.data: List[str] = []
 
-    def add_block(self, block: str):
-        self.blocks.append(block)
+    def add_data(self, val: str):
+        self.data.append(val)
 
-
-class StreetName:
+class StreetName(BaseColumn):
     def __init__(self):
-        self.streets: list[str] = []
+        super().__init__()
+        self.data: List[str] = []
 
-    def add_street(self, street: str):
-        self.streets.append(street)
+    def add_data(self, val: str):
+        self.data.append(val)
 
-
-class StoreyRange:
+class StoreyRange(BaseColumn):
     def __init__(self):
-        self.ranges: list[str] = []
+        super().__init__()
+        self.data: List[str] = []
 
-    def add_range(self, range: str):
-        self.ranges.append(range)
+    def add_data(self, val: str):
+        self.data.append(val)
 
-
-class FloorAreaSqm:
+class FloorAreaSqm(BaseColumn):
     def __init__(self):
-        self.areas: list[float] = []
+        super().__init__()
+        self.data: List[float] = []
 
-    def add_area(self, area: float):
-        self.areas.append(area)
+    def add_data(self, val: float):
+        self.data.append(val)
 
-
-class FlatModel:
+class FlatModel(BaseColumn):
     def __init__(self):
-        self.models: list[str] = []
+        super().__init__()
+        self.data: List[str] = []
 
-    def add_model(self, model: str):
-        self.models.append(model)
+    def add_data(self, val: str):
+        self.data.append(val)
 
-
-class LeaseCommenceDate:
+class LeaseCommenceDate(BaseColumn):
     def __init__(self):
-        self.dates: list[int] = []
+        super().__init__()
+        self.data: List[int] = []
 
-    def add_date(self, date: int):
-        self.dates.append(date)
+    def add_data(self, val: int):
+        self.data.append(val)
 
-
-class ResalePrice:
+class ResalePrice(BaseColumn):
     def __init__(self):
-        self.prices: list[float] = []
+        super().__init__()
+        self.data: List[float] = []
 
-    def add_price(self, price: float):
-        self.prices.append(price)
+    def add_data(self, val: float):
+        self.data.append(val)
