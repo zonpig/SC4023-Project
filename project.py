@@ -75,7 +75,9 @@ def read_csv(file_path: str, type: int):
 
 def main():
     # matric number
-    matric_number = "U2121223J"
+    # matric_number = "U2121223J" #Darren
+    # matric_number = "U2121763H" #Bryan
+    matric_number = "U2122055E" #Jin Yang
 
     last_digit_year = int(matric_number[-2])
     year = year_map[last_digit_year]
