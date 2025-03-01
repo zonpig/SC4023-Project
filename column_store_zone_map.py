@@ -293,9 +293,11 @@ def main():
     
     
     #play around with the zone_mapping and rearranged_col_store
-    print(type(resale_data.rearranged_column_store))
-    print(type(resale_data.zone_mapping))
-    print(resale_data.zone_mapping)
+    # print(type(resale_data.rearranged_column_store))
+    # print(type(resale_data.zone_mapping))
+    # for k, v in resale_data.zone_mapping.items():
+    #     print(k, v)
+    # print()
 
     # start_time = time.time()
     # min_price = resale_data.min_price(year,month,town)
