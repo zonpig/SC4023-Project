@@ -56,26 +56,40 @@ class ZoneMapping:
     '''
     
     def __rearrange__(self, column_store, col_name):
-
+        print("Running rearrange function")
         mapped_col_idxs = {}
 
-        for i,col_val in column_store[col_name].data:
+        print("Adding idx to mapped_col_idxs")
+        for i,col_val in enumerate(column_store[col_name].data):
             if col_val in mapped_col_idxs:
                 mapped_col_idxs[col_val].append(i)
             else:
                 mapped_col_idxs[col_val] = [i]
+        
+        print("Done adding idx to mapped_col_idxs")
+        print(f"mapped_col_idx keys: {mapped_col_idxs.keys()}")
 
         # STEP: Create an empty dictionary each for each column
         rerranged_column_store = defaultdict(list)
         columns = [k for k in column_store.keys()]
+        print(f"all columns: {columns}")
 
         # TODO: we need to store the column store in a dictionary with key being column name and values being the rows
         # STEP: Iterate through the column store and add to each dict
         for col in columns:
             for unique_col_val in mapped_col_idxs:
-                rerranged_column_store[col].extend([column_store.columns[col][idx] for idx in mapped_col_idxs[unique_col_val]])
-
+                rerranged_column_store[col].extend([column_store[col].data[idx] for idx in mapped_col_idxs[unique_col_val]])
+        
+        
+        print(type(rerranged_column_store))
+        # print(f"Testing 1 column of rearranged col store: {rerranged_column_store["block"]}")
+        print(f"rerranged_column_store keys: {rerranged_column_store.keys()}")
+        
         # TODO: need to return objects instead of a dictionary
+        
+        
+        print("Returning rearranged col store")
+        print()
         return mapped_col_idxs, rerranged_column_store
     
     def fit(self, column_store, col_name):

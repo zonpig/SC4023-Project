@@ -290,13 +290,19 @@ def main():
             resale_data.add_data(row)
 
     resale_data.create_zone_map("flat_type")
+    
+    
+    #play around with the zone_mapping and rearranged_col_store
+    print(type(resale_data.rearranged_column_store))
+    print(type(resale_data.zone_mapping))
+    print(resale_data.zone_mapping)
 
-    start_time = time.time()
-    min_price = resale_data.min_price(year,month,town)
-    end_time = time.time()
+    # start_time = time.time()
+    # min_price = resale_data.min_price(year,month,town)
+    # end_time = time.time()
 
-    print("min price: ", min_price)
-    print("time_elapsed: ", end_time - start_time)
+    # print("min price: ", min_price)
+    # print("time_elapsed: ", end_time - start_time)
 
 if __name__ == "__main__":
     main()
