@@ -1,9 +1,9 @@
 import csv
 import time
 from column_store import ResalePriceData
-# from column_store_encoded import ResalePriceDataEncoded
+from column_store_encoded import ResalePriceDataEncoded
 from column_store_zone_map import ResalePriceDataZoneMap
-# from column_store_combined import ResalePriceDataCombined
+from column_store_combined import ResalePriceDataCombined
 
 town_map = {
     0: "BEDOK",
@@ -36,13 +36,12 @@ def read_csv(file_path: str, type: int):
     if type == 0:
         resale_data = ResalePriceData()
     elif type == 1:
-        # resale_data = ResalePriceDataEncoded()
-        pass
+        resale_data = ResalePriceDataEncoded()
     elif type == 2:
         resale_data = ResalePriceDataZoneMap()
     elif type == 3:
-        # resale_data = ResalePriceDataCombined()
-        pass
+        resale_data = ResalePriceDataCombined()
+        
     with open(file_path, mode="r") as file:
         csv_reader = csv.reader(file)
         _ = next(csv_reader)
@@ -88,9 +87,9 @@ def main():
 
     file_path = "ResalePricesSingapore.csv"
     column_store = read_csv(file_path, 0)
-    # column_store_encoded = read_csv(file_path, 1)
+    column_store_encoded = read_csv(file_path, 1)
     column_store_zone_map = read_csv(file_path, 2)
-    # column_store_combined = read_csv(file_path, 3)
+    column_store_combined = read_csv(file_path, 3)
 
     # Scenario 1: Original
     print("Scenario 1: Original")
@@ -116,30 +115,31 @@ def main():
     print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
     print()
 
-    # # Scenario 2: Encode Town
-    # column_store_encoded.encode_town()
-    # print("Scenario 2: Encode Town")
+    # Scenario 2: Encode Town
+    column_store_encoded.encode_town()
+    print("Scenario 2: Encode Town")
 
-    # start_time = time.time()
-    # column_store_encoded.min_price(year, month, town)
-    # end_time = time.time()
-    # print(f"Time taken for min_price: {end_time - start_time} seconds")
+    start_time = time.time()
+    column_store_encoded.min_price(year, month, town)
+    end_time = time.time()
+    print(f"Time taken for min_price: {end_time - start_time} seconds")
 
-    # start_time = time.time()
-    # column_store_encoded.sd_price(year, month, town)
-    # end_time = time.time()
-    # print(f"Time taken for sd_price: {end_time - start_time} seconds")
+    start_time = time.time()
+    column_store_encoded.sd_price(year, month, town)
+    end_time = time.time()
+    print(f"Time taken for sd_price: {end_time - start_time} seconds")
 
-    # start_time = time.time()
-    # column_store_encoded.avg_price(year, month, town)
-    # end_time = time.time()
-    # print(f"Time taken for avg_price: {end_time - start_time} seconds")
+    start_time = time.time()
+    column_store_encoded.avg_price(year, month, town)
+    end_time = time.time()
+    print(f"Time taken for avg_price: {end_time - start_time} seconds")
 
-    # start_time = time.time()
-    # column_store_encoded.min_price_per_sqm(year, month, town)
-    # end_time = time.time()
-    # print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
-
+    start_time = time.time()
+    column_store_encoded.min_price_per_sqm(year, month, town)
+    end_time = time.time()
+    print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
+    print()
+    
     # Scenario 3: ZoneMap using Flat Type
     column_store_zone_map.create_zone_map("flat_type")
     print("Scenario 3.5: ZoneMap using Flat Type")
@@ -163,57 +163,34 @@ def main():
     column_store_zone_map.min_price_per_sqm(year, month, town)
     end_time = time.time()
     print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
+    print()
     
 
-    # # Scenario 3.5: ZoneMap Area
-    # for zone_size in [4, 8, 16, 32, 64]:
-    #     column_store_zone_map.create_zone_map(zone_size)
-    #     print(f"Scenario 3.5: ZoneMap Area {zone_size}")
 
-    #     start_time = time.time()
-    #     column_store_zone_map.min_price(year, month, town)
-    #     end_time = time.time()
-    #     print(f"Time taken for min_price: {end_time - start_time} seconds")
+    # Scenario 4: Encode Town + ZoneMap Area
+    column_store_combined.create_zone_map("flat_type") #have to zonemap first to create the rearrange columns, then encode town on that rearrange columns
+    column_store_combined.encode_town()
+    print("Scenario 4: Encode Town + ZoneMap using Flat Type")
 
-    #     start_time = time.time()
-    #     column_store_zone_map.sd_price(year, month, town)
-    #     end_time = time.time()
-    #     print(f"Time taken for sd_price: {end_time - start_time} seconds")
+    start_time = time.time()
+    column_store_combined.min_price(year, month, town)
+    end_time = time.time()
+    print(f"Time taken for min_price: {end_time - start_time} seconds")
 
-    #     start_time = time.time()
-    #     column_store_zone_map.avg_price(year, month, town)
-    #     end_time = time.time()
-    #     print(f"Time taken for avg_price: {end_time - start_time} seconds")
+    start_time = time.time()
+    column_store_combined.sd_price(year, month, town)
+    end_time = time.time()
+    print(f"Time taken for sd_price: {end_time - start_time} seconds")
 
-    #     start_time = time.time()
-    #     column_store_zone_map.min_price_per_sqm(year, month, town)
-    #     end_time = time.time()
-    #     print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
+    start_time = time.time()
+    column_store_combined.avg_price(year, month, town)
+    end_time = time.time()
+    print(f"Time taken for avg_price: {end_time - start_time} seconds")
 
-    # # Scenario 4: Encode Town + ZoneMap Area
-    # column_store_combined.encode_town()
-    # column_store_combined.create_zone_map(16)
-    # print("Scenario 4: Encode Town + ZoneMap Area")
-
-    # start_time = time.time()
-    # column_store_combined.min_price(year, month, town)
-    # end_time = time.time()
-    # print(f"Time taken for min_price: {end_time - start_time} seconds")
-
-    # start_time = time.time()
-    # column_store_combined.sd_price(year, month, town)
-    # end_time = time.time()
-    # print(f"Time taken for sd_price: {end_time - start_time} seconds")
-
-    # start_time = time.time()
-    # column_store_combined.avg_price(year, month, town)
-    # end_time = time.time()
-    # print(f"Time taken for avg_price: {end_time - start_time} seconds")
-
-    # start_time = time.time()
-    # column_store_combined.min_price_per_sqm(year, month, town)
-    # end_time = time.time()
-    # print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
+    start_time = time.time()
+    column_store_combined.min_price_per_sqm(year, month, town)
+    end_time = time.time()
+    print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
 
     # # Output Code
     # categories = [
