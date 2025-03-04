@@ -14,7 +14,7 @@ class Month(BaseColumn):
 
     def add_data(self, val: str):
         year, month = map(int, val.split("-"))
-        self.data.append({"year": year, "month": month})
+        self.data.append({"year": int(year), "month": int(month)})
 
 class Town(BaseColumn):
     def __init__(self):
@@ -70,7 +70,7 @@ class FloorAreaSqm(BaseColumn):
         self.data: List[float] = []
 
     def add_data(self, val: float):
-        self.data.append(val)
+        self.data.append(float(val))
 
 class FlatModel(BaseColumn):
     def __init__(self):
@@ -86,7 +86,7 @@ class LeaseCommenceDate(BaseColumn):
         self.data: List[int] = []
 
     def add_data(self, val: int):
-        self.data.append(val)
+        self.data.append(int(val))
 
 class ResalePrice(BaseColumn):
     def __init__(self):
@@ -94,4 +94,4 @@ class ResalePrice(BaseColumn):
         self.data: List[float] = []
 
     def add_data(self, val: float):
-        self.data.append(val)
+        self.data.append(float(val))
