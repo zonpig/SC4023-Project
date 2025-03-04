@@ -16,58 +16,41 @@ from column_preprocess import CategoricalEncoder
 
 class ResalePriceDataEncoded:
     def __init__(self):
-        self.month = Month()  # Querying
-        self.town = TownEncoded()  # Querying
-        self.flat_type = FlatType()
-        self.block = Block()
-        self.street_name = StreetName()
-        self.storey_range = StoreyRange()
-        self.floor_area_sqm = FloorAreaSqm()  # Querying
-        self.flat_model = FlatModel()
-        self.lease_commence_date = LeaseCommenceDate()
-        self.resale_price = ResalePrice()  # Querying
+        self.columns = {
+            "month": Month(),  # Querying
+            "town": Town(),  # Querying
+            "flat_type": FlatType(),
+            "block": Block(),
+            "street_name": StreetName(),
+            "storey_range": StoreyRange(),
+            "floor_area_sqm": FloorAreaSqm(),  # Querying
+            "flat_model": FlatModel(),
+            "lease_commence_date": LeaseCommenceDate(),
+            "resale_price": ResalePrice()  # Querying
+        }
 
-    def add_data(
-        self,
-        month,
-        town,
-        flat_type,
-        block,
-        street_name,
-        storey_range,
-        floor_area_sqm,
-        flat_model,
-        lease_commence_date,
-        resale_price,
-    ):
-        self.month.add_month(month)
-        self.town.add_town(town)
-        self.flat_type.add_type(flat_type)
-        self.block.add_block(block)
-        self.street_name.add_street(street_name)
-        self.storey_range.add_range(storey_range)
-        self.floor_area_sqm.add_area(floor_area_sqm)
-        self.flat_model.add_model(flat_model)
-        self.lease_commence_date.add_date(lease_commence_date)
-        self.resale_price.add_price(resale_price)
-
-    def encode_town(self):
-        self.town_encoder = CategoricalEncoder("town", self.town.towns)
-        self.town.towns = self.town_encoder.transform(self.town.towns)
+    # Jinyang's
+    def add_data(self,row):
+        for i,col in enumerate(self.columns.keys()):
+            self.columns[col].add_data(row[i])
 
     def __str__(self):
         return (
-            f"Months: {self.month.months}\n"
-            f"Towns: {self.town.towns}\n"
-            f"Flat Types: {self.flat_type.types}\n"
-            f"Blocks: {self.block.blocks}\n"
-            f"Street Names: {self.street_name.streets}\n"
-            f"Storey Ranges: {self.storey_range.ranges}\n"
-            f"Floor Areas (sqm): {self.floor_area_sqm.areas}\n"
-            f"Flat Models: {self.flat_model.models}\n"
-            f"Lease Commence Dates: {self.lease_commence_date.dates}\n"
-            f"Resale Prices: {self.resale_price.prices}\n"
+            f"Months: {self.columns['month'].data}\n"
+            f"Towns: {self.columns['town'].data}\n"
+            f"Flat Types: {self.columns['flat_type'].data}\n"
+            f"Blocks: {self.columns['block'].data}\n"
+            f"Street Names: {self.columns['street_name'].data}\n"
+            f"Storey Ranges: {self.columns['storey_range'].data}\n"
+            f"Floor Areas (sqm): {self.columns['floor_area_sqm'].data}\n"
+            f"Flat Models: {self.columns['flat_model'].data}\n"
+            f"Lease Commence Dates: {self.columns['lease_commence_date'].data}\n"
+            f"Resale Prices: {self.columns['resale_price'].data}\n"
         )
+        
+    def encode_town(self):
+        self.town_encoder = CategoricalEncoder("town", self.town.towns)
+        self.town.towns = self.town_encoder.transform(self.town.towns)
 
     # Minimum Price
     def min_price(self, year, month, town):
