@@ -15,7 +15,7 @@ from columns import (
 )
 
 from column_preprocess import ZoneMapping, CategoricalEncoder
-
+import pandas as pd
 
 class ResalePriceDataCombined:
     def __init__(self):
@@ -59,8 +59,11 @@ class ResalePriceDataCombined:
         )
 
     # Minimum Price
-    def min_price(self, year, month, town):
+    def min_price(self, year, month, town, log_query=False):
         min_price = float("inf")
+
+        rows_scanned = [0]*4
+        col_idx = 0
 
         # start with area
         area_position_match =  []
@@ -76,39 +79,68 @@ class ResalePriceDataCombined:
 
             else:
                 for i in range(zone_start_idx, zone_end_idx+1):
+                    rows_scanned[col_idx] += 1
                     if self.rearranged_columns["floor_area_sqm"][i] >= 80:
                         area_position_match.append(i)
+        col_idx += 1
+
         # month
         month_position_match = []
         for i in area_position_match:
+            rows_scanned[col_idx] += 1
             if (
-                self.rearranged_columns["month"][i]["month"] == month
-                or self.rearranged_columns["month"][i]["month"] == month + 1
+                self.columns["month"].data[i]["month"] == month
+                or self.columns["month"].data[i]["month"] == month + 1
             ):
                 month_position_match.append(i)
+        col_idx += 1
 
         # year
         year_position_match = []
         for i in month_position_match:
-            if self.rearranged_columns["month"][i]["year"] == year:
+            rows_scanned[col_idx] += 1
+            if self.columns["month"].data[i]["year"] == year:
                 year_position_match.append(i)
+        col_idx += 1
 
         # town
         town_position_match = []
         for i in year_position_match:
-            if self.rearranged_columns["town"][i] == self.town_encoder.transform(town):
+            rows_scanned[col_idx] += 1
+            if self.columns["town"].data[i] == town:
                 town_position_match.append(i)
+        col_idx += 1
 
         # price
         for i in town_position_match:
             if self.rearranged_columns["resale_price"][i] < min_price:
                 min_price = self.rearranged_columns["resale_price"][i]
 
+        if log_query:
+            col_string = ""
+            query_lengths = {}
+            col_string += "->floor_area_sqm"
+            query_lengths[col_string] = rows_scanned[0]
+            col_string += "->month"
+            query_lengths[col_string] = rows_scanned[1]
+            col_string += "->year"
+            query_lengths[col_string] = rows_scanned[2]
+            col_string += "->town"
+            query_lengths[col_string] = rows_scanned[3]
+            
+            query_lengths_df = pd.DataFrame(data={"cols": [k for k in query_lengths.keys()],
+                                                  "lengths": [v for _,v in query_lengths.items()]})
+            return min_price if min_price != float("inf") else "No result", query_lengths_df         
+        
         return min_price if min_price != float("inf") else "No result"
+        
 
     # Standard Deviation of Price
-    def sd_price(self, year, month, town):
+    def sd_price(self, year, month, town, log_query=False):
         
+        rows_scanned = [0]*4
+        col_idx = 0
+
         # start with area
         area_position_match =  []
         # iterate through area position zones
@@ -123,42 +155,75 @@ class ResalePriceDataCombined:
 
             else:
                 for i in range(zone_start_idx, zone_end_idx+1):
+                    rows_scanned[col_idx] += 1
                     if self.rearranged_columns["floor_area_sqm"][i] >= 80:
                         area_position_match.append(i)
+        col_idx += 1
+
         # month
         month_position_match = []
         for i in area_position_match:
+            rows_scanned[col_idx] += 1
             if (
-                self.rearranged_columns["month"][i]["month"] == month
-                or self.rearranged_columns["month"][i]["month"] == month + 1
+                self.columns["month"].data[i]["month"] == month
+                or self.columns["month"].data[i]["month"] == month + 1
             ):
                 month_position_match.append(i)
+        col_idx += 1
+
 
         # year
         year_position_match = []
         for i in month_position_match:
-            if self.rearranged_columns["month"][i]["year"] == year:
+            rows_scanned[col_idx] += 1
+            if self.columns["month"].data[i]["year"] == year:
                 year_position_match.append(i)
+        col_idx += 1
 
         # town
         town_position_match = []
         for i in year_position_match:
-            if self.rearranged_columns["town"][i] == self.town_encoder.transform(town):
+            rows_scanned[col_idx] += 1
+            if self.columns["town"].data[i] == town:
                 town_position_match.append(i)
+        col_idx += 1
 
         # price
         prices = [self.rearranged_columns["resale_price"][i] for i in town_position_match]
+
         if not prices:
-            return "No result"
-        mean_price = sum(prices) / len(prices)
-        variance = sum((price - mean_price) ** 2 for price in prices) / (
-            len(prices) - 1
-        )        
-        return round(variance**0.5, 2)
+            query_res = "No Results"
+        else:
+            mean_price = sum(prices) / len(prices)
+            variance = sum((price - mean_price) ** 2 for price in prices) / (
+                len(prices) - 1
+            )        
+            query_res = round(variance**0.5, 2)
+        
+        if log_query:
+            col_string = ""
+            query_lengths = {}
+            col_string += "->floor_area_sqm"
+            query_lengths[col_string] = rows_scanned[0]
+            col_string += "->month"
+            query_lengths[col_string] = rows_scanned[1]
+            col_string += "->year"
+            query_lengths[col_string] = rows_scanned[2]
+            col_string += "->town"
+            query_lengths[col_string] = rows_scanned[3]
+
+            query_lengths_df = pd.DataFrame(data={"cols": [k for k in query_lengths.keys()],
+                                                  "lengths": [v for _,v in query_lengths.items()]})
+            return query_res, query_lengths_df
+        return query_res
+
 
     # Average Price
-    def avg_price(self, year, month, town):
+    def avg_price(self, year, month, town, log_query=False):
         
+        rows_scanned = [0]*4
+        col_idx = 0
+
         # start with area
         area_position_match =  []
         # iterate through area position zones
@@ -173,39 +238,70 @@ class ResalePriceDataCombined:
 
             else:
                 for i in range(zone_start_idx, zone_end_idx+1):
+                    rows_scanned[col_idx] += 1
                     if self.rearranged_columns["floor_area_sqm"][i] >= 80:
                         area_position_match.append(i)
+        col_idx += 1
+
         # month
         month_position_match = []
         for i in area_position_match:
+            rows_scanned[col_idx] += 1
             if (
-                self.rearranged_columns["month"][i]["month"] == month
-                or self.rearranged_columns["month"][i]["month"] == month + 1
+                self.columns["month"].data[i]["month"] == month
+                or self.columns["month"].data[i]["month"] == month + 1
             ):
                 month_position_match.append(i)
+        col_idx += 1
 
         # year
         year_position_match = []
         for i in month_position_match:
-            if self.rearranged_columns["month"][i]["year"] == year:
+            rows_scanned[col_idx] += 1
+            if self.columns["month"].data[i]["year"] == year:
                 year_position_match.append(i)
+        col_idx += 1
 
         # town
         town_position_match = []
         for i in year_position_match:
-            if self.rearranged_columns["town"][i] == self.town_encoder.transform(town):
+            rows_scanned[col_idx] += 1
+            if self.columns["town"].data[i] == town:
                 town_position_match.append(i)
+        col_idx += 1
+
 
         # price
         prices = [self.rearranged_columns["resale_price"][i] for i in town_position_match]
+
         if not prices:
-            return "No Results"
-        mean_price = sum(prices) / len(prices)
-        return round(mean_price, 2)
+            query_res = "No Results"
+        else:
+            mean_price = sum(prices) / len(prices)
+            query_res = round(mean_price, 2)
+        
+        if log_query:
+            col_string = ""
+            query_lengths = {}
+            col_string += "->floor_area_sqm"
+            query_lengths[col_string] = rows_scanned[0]
+            col_string += "->month"
+            query_lengths[col_string] = rows_scanned[1]
+            col_string += "->year"
+            query_lengths[col_string] = rows_scanned[2]
+            col_string += "->town"
+            query_lengths[col_string] = rows_scanned[3]
+            query_lengths_df = pd.DataFrame(data={"cols": [k for k in query_lengths.keys()],
+                                                  "lengths": [v for _,v in query_lengths.items()]})
+            return query_res, query_lengths_df             
+        return query_res
 
     # Minimum Price per Square Meter
-    def min_price_per_sqm(self, year, month, town):
+    def min_price_per_sqm(self, year, month, town, log_query=False):
         min_price_per_sqm = float("inf")
+
+        rows_scanned = [0]*4
+        col_idx = 0
 
         # start with area
         area_position_match =  []
@@ -221,28 +317,37 @@ class ResalePriceDataCombined:
 
             else:
                 for i in range(zone_start_idx, zone_end_idx+1):
+                    rows_scanned[col_idx] += 1  
                     if self.rearranged_columns["floor_area_sqm"][i] >= 80:
                         area_position_match.append(i)
+        col_idx += 1
+
         # month
         month_position_match = []
         for i in area_position_match:
+            rows_scanned[col_idx] += 1
             if (
-                self.rearranged_columns["month"][i]["month"] == month
-                or self.rearranged_columns["month"][i]["month"] == month + 1
+                self.columns["month"].data[i]["month"] == month
+                or self.columns["month"].data[i]["month"] == month + 1
             ):
                 month_position_match.append(i)
+        col_idx += 1
 
         # year
         year_position_match = []
         for i in month_position_match:
-            if self.rearranged_columns["month"][i]["year"] == year:
+            rows_scanned[col_idx] += 1
+            if self.columns["month"].data[i]["year"] == year:
                 year_position_match.append(i)
-
+        col_idx += 1
+        
         # town
         town_position_match = []
         for i in year_position_match:
-            if self.rearranged_columns["town"][i] == self.town_encoder.transform(town):
+            rows_scanned[col_idx] += 1
+            if self.columns["town"].data[i] == town:
                 town_position_match.append(i)
+        col_idx += 1
 
         # price
         for i in town_position_match:
@@ -250,13 +355,27 @@ class ResalePriceDataCombined:
             if price_per_sqm < min_price_per_sqm:
                 min_price_per_sqm = price_per_sqm
 
-        return (
-            round(min_price_per_sqm, 2)
-            if min_price_per_sqm != float("inf")
-            else "No result"
-        )
+        if min_price_per_sqm != float("inf"):
+            query_res = "No Results"
+        else:
+            query_res = round(min_price_per_sqm, 2)
 
-
+        if log_query:
+            col_string = ""
+            query_lengths = {}
+            col_string += "->floor_area_sqm"
+            query_lengths[col_string] = rows_scanned[0]
+            col_string += "->month"
+            query_lengths[col_string] = rows_scanned[1]
+            col_string += "->year"
+            query_lengths[col_string] = rows_scanned[2]
+            col_string += "->town"
+            query_lengths[col_string] = rows_scanned[3]
+            query_lengths_df = pd.DataFrame(data={"cols": [k for k in query_lengths.keys()],
+                                                  "lengths": [v for _,v in query_lengths.items()]})
+            return query_res, query_lengths_df             
+        return query_res
+    
 # def main():
 #     town_map = {
 #     0: "BEDOK",
