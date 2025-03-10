@@ -3,7 +3,7 @@
 
 from columns import (
     Month,
-    TownEncoded,
+    Town,
     FlatType,
     Block,
     StreetName,
@@ -14,15 +14,16 @@ from columns import (
     ResalePrice,
 )
 
-from column_preprocess import ZoneMappingCat, CategoricalEncoder
+from column_preprocess import ZoneMappingNum
+from collections import defaultdict
 import pandas as pd
 
 
-class ResalePriceDataCombined:
+class ResalePriceDataZoneMapNum:
     def __init__(self):
         self.columns = {
             "month": Month(),  # Querying
-            "town": TownEncoded(),  # Querying
+            "town": Town(),  # Querying
             "flat_type": FlatType(),
             "block": Block(),
             "street_name": StreetName(),
@@ -38,17 +39,6 @@ class ResalePriceDataCombined:
         for i, col in enumerate(self.columns.keys()):
             self.columns[col].add_data(row[i])
 
-    def create_zone_map(self, col_name):
-        self.zone_mapping, self.rearranged_columns = ZoneMappingCat().fit(
-            self, col_name
-        )
-
-    def encode_town(self):
-        self.town_encoder = CategoricalEncoder("town", self.rearranged_columns["town"])
-        self.rearranged_columns["town"] = self.town_encoder.transform(
-            self.rearranged_columns["town"]
-        )
-
     def __str__(self):
         return (
             f"Months: {self.columns['month'].data}\n"
@@ -63,6 +53,13 @@ class ResalePriceDataCombined:
             f"Resale Prices: {self.columns['resale_price'].data}\n"
         )
 
+    def create_zone_map(self, num_zones):
+        self.floor_area_sqm_zone_map = ZoneMappingNum("floor_area_sqm", num_zones)
+        self.floor_area_sqm_zone_map.fit(self.columns["floor_area_sqm"].data)
+
+    def log_queries(self):
+        res = defaultdict(list)
+
     # Minimum Price
     def min_price(self, year, month, town, log_query=False):
         min_price = float("inf")
@@ -71,22 +68,22 @@ class ResalePriceDataCombined:
         col_idx = 0
 
         # start with area
+        area_position_zones = []
+        for i, j in self.floor_area_sqm_zone_map.zones.items():
+            if j[1] >= 80:
+                area_position_zones.append(i)
+
         area_position_match = []
-        # iterate through area position zones
-        for v in self.zone_mapping.values():
-            zone_max_val = v["zone_max"]
-            zone_start_idx = v["start_idx"]
-            zone_end_idx = v["end_idx"]
+        for i in area_position_zones:
+            start_index = i * self.floor_area_sqm_zone_map.rows_per_zone
+            end_index = min(
+                (i + 1) * self.floor_area_sqm_zone_map.rows_per_zone,
+                len(self.columns["floor_area_sqm"].data),
+            )
+            for j in range(start_index, end_index):
+                if self.columns["floor_area_sqm"].data[j] >= 80:
+                    area_position_match.append(j)
 
-            # skip zones whos max is < 80
-            if zone_max_val < 80:
-                continue
-
-            else:
-                for i in range(zone_start_idx, zone_end_idx + 1):
-                    rows_scanned[col_idx] += 1
-                    if self.rearranged_columns["floor_area_sqm"][i] >= 80:
-                        area_position_match.append(i)
         col_idx += 1
 
         # month
@@ -118,8 +115,8 @@ class ResalePriceDataCombined:
 
         # price
         for i in town_position_match:
-            if self.rearranged_columns["resale_price"][i] < min_price:
-                min_price = self.rearranged_columns["resale_price"][i]
+            if self.columns["resale_price"].data[i] < min_price:
+                min_price = self.columns["resale_price"].data[i]
 
         if log_query:
             col_string = ""
@@ -151,22 +148,21 @@ class ResalePriceDataCombined:
         col_idx = 0
 
         # start with area
+        area_position_zones = []
+        for i, j in self.floor_area_sqm_zone_map.zones.items():
+            if j[1] >= 80:
+                area_position_zones.append(i)
+
         area_position_match = []
-        # iterate through area position zones
-        for v in self.zone_mapping.values():
-            zone_max_val = v["zone_max"]
-            zone_start_idx = v["start_idx"]
-            zone_end_idx = v["end_idx"]
-
-            # skip zones whos max is < 80
-            if zone_max_val < 80:
-                continue
-
-            else:
-                for i in range(zone_start_idx, zone_end_idx + 1):
-                    rows_scanned[col_idx] += 1
-                    if self.rearranged_columns["floor_area_sqm"][i] >= 80:
-                        area_position_match.append(i)
+        for i in area_position_zones:
+            start_index = i * self.floor_area_sqm_zone_map.rows_per_zone
+            end_index = min(
+                (i + 1) * self.floor_area_sqm_zone_map.rows_per_zone,
+                len(self.columns["floor_area_sqm"].data),
+            )
+            for j in range(start_index, end_index):
+                if self.columns["floor_area_sqm"].data[j] >= 80:
+                    area_position_match.append(j)
         col_idx += 1
 
         # month
@@ -197,9 +193,7 @@ class ResalePriceDataCombined:
         col_idx += 1
 
         # price
-        prices = [
-            self.rearranged_columns["resale_price"][i] for i in town_position_match
-        ]
+        prices = [self.columns["resale_price"].data[i] for i in town_position_match]
 
         if not prices:
             query_res = "No Results"
@@ -221,7 +215,6 @@ class ResalePriceDataCombined:
             query_lengths[col_string] = rows_scanned[2]
             col_string += "->town"
             query_lengths[col_string] = rows_scanned[3]
-
             query_lengths_df = pd.DataFrame(
                 data={
                     "cols": [k for k in query_lengths.keys()],
@@ -237,22 +230,21 @@ class ResalePriceDataCombined:
         col_idx = 0
 
         # start with area
+        area_position_zones = []
+        for i, j in self.floor_area_sqm_zone_map.zones.items():
+            if j[1] >= 80:
+                area_position_zones.append(i)
+
         area_position_match = []
-        # iterate through area position zones
-        for v in self.zone_mapping.values():
-            zone_max_val = v["zone_max"]
-            zone_start_idx = v["start_idx"]
-            zone_end_idx = v["end_idx"]
-
-            # skip zones whos max is < 80
-            if zone_max_val < 80:
-                continue
-
-            else:
-                for i in range(zone_start_idx, zone_end_idx + 1):
-                    rows_scanned[col_idx] += 1
-                    if self.rearranged_columns["floor_area_sqm"][i] >= 80:
-                        area_position_match.append(i)
+        for i in area_position_zones:
+            start_index = i * self.floor_area_sqm_zone_map.rows_per_zone
+            end_index = min(
+                (i + 1) * self.floor_area_sqm_zone_map.rows_per_zone,
+                len(self.columns["floor_area_sqm"].data),
+            )
+            for j in range(start_index, end_index):
+                if self.columns["floor_area_sqm"].data[j] >= 80:
+                    area_position_match.append(j)
         col_idx += 1
 
         # month
@@ -283,10 +275,7 @@ class ResalePriceDataCombined:
         col_idx += 1
 
         # price
-        prices = [
-            self.rearranged_columns["resale_price"][i] for i in town_position_match
-        ]
-
+        prices = [self.columns["resale_price"].data[i] for i in town_position_match]
         if not prices:
             query_res = "No Results"
         else:
@@ -321,22 +310,21 @@ class ResalePriceDataCombined:
         col_idx = 0
 
         # start with area
+        area_position_zones = []
+        for i, j in self.floor_area_sqm_zone_map.zones.items():
+            if j[1] >= 80:
+                area_position_zones.append(i)
+
         area_position_match = []
-        # iterate through area position zones
-        for v in self.zone_mapping.values():
-            zone_max_val = v["zone_max"]
-            zone_start_idx = v["start_idx"]
-            zone_end_idx = v["end_idx"]
-
-            # skip zones whos max is < 80
-            if zone_max_val < 80:
-                continue
-
-            else:
-                for i in range(zone_start_idx, zone_end_idx + 1):
-                    rows_scanned[col_idx] += 1
-                    if self.rearranged_columns["floor_area_sqm"][i] >= 80:
-                        area_position_match.append(i)
+        for i in area_position_zones:
+            start_index = i * self.floor_area_sqm_zone_map.rows_per_zone
+            end_index = min(
+                (i + 1) * self.floor_area_sqm_zone_map.rows_per_zone,
+                len(self.columns["floor_area_sqm"].data),
+            )
+            for j in range(start_index, end_index):
+                if self.columns["floor_area_sqm"].data[j] >= 80:
+                    area_position_match.append(j)
         col_idx += 1
 
         # month
@@ -369,8 +357,8 @@ class ResalePriceDataCombined:
         # price
         for i in town_position_match:
             price_per_sqm = (
-                self.rearranged_columns["resale_price"][i]
-                / self.rearranged_columns["floor_area_sqm"][i]
+                self.columns["resale_price"].data[i]
+                / self.columns["floor_area_sqm"].data[i]
             )
             if price_per_sqm < min_price_per_sqm:
                 min_price_per_sqm = price_per_sqm
@@ -440,7 +428,7 @@ class ResalePriceDataCombined:
 #     town = town_map[town_index]
 
 #     file_path = "ResalePricesSingapore.csv"
-#     resale_data = ResalePriceDataCombined()
+#     resale_data = ResalePriceDataZoneMapNum()
 #     with open(file_path, mode="r") as file:
 #         csv_reader = csv.reader(file)
 #         _ = next(csv_reader)
@@ -448,9 +436,23 @@ class ResalePriceDataCombined:
 #             resale_data.add_data(row)
 
 
-#     #have to zonemap first to create the rearrange columns, then encode town on that rearrange columns
+#     # Creating zone map on flat_type column
 #     resale_data.create_zone_map("flat_type")
-#     resale_data.encode_town()
+
+#     # checking rearranged col attribute
+#     # print("Accessing rearranged columns in new attribute:")
+#     # print(f"Length of rearranged columns: {sum(len(v) for v in resale_data.rearranged_columns.values())}")
+#     # print(resale_data.rearranged_columns.keys())
+#     # print(resale_data.rearranged_columns["resale_price"])
+#     # print(type(resale_data.rearranged_columns["resale_price"][0]))
+#     # print(type(resale_data.columns["resale_price"].data[0]))
+#     # print(resale_data.columns["resale_price"].data)
+#     # print()
+
+#     # checking zone mapping attribute
+#     # print("Accessing zone mapping in new attribute:")
+#     # for k,v in resale_data.zone_mapping.items():
+#     #     print(k,v)
 
 
 #     start_time = time.time()
