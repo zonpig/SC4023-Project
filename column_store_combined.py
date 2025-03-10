@@ -217,7 +217,6 @@ class ResalePriceDataCombined:
             return query_res, query_lengths_df
         return query_res
 
-
     # Average Price
     def avg_price(self, year, month, town, log_query=False):
         
