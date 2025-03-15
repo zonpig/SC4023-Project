@@ -104,15 +104,36 @@ def main(args):
     column_store_mp = read_csv(file_path, 6)
     print("month first")
     start = time.time()
-    min_price = column_store_mp.min_price_month_first(year, month, town)
+    min_price = column_store_mp.min_price(year, month, town)
     end = time.time()
     print(min_price, "time elapsed: ", end - start)
 
-    print("year first")
     start = time.time()
-    min_price = column_store_mp.min_price_year_first(year, month, town)
+    min_price = column_store_mp.min_price_modified(year, month, town)
     end = time.time()
     print(min_price, "time elapsed: ", end - start)
+
+    start = time.time()
+    min_price = column_store_mp.min_price_chunk(year, month, town)
+    end = time.time()
+    print(min_price, "time elapsed: ", end - start)
+
+    start = time.time()
+    min_price = column_store_mp.min_price_thread(year, month, town)
+    end = time.time()
+    print(min_price, "time elapsed: ", end - start)
+
+    # print("month first")
+    # start = time.time()
+    # min_price = column_store_mp.min_price_month_first(year,month,town)
+    # end = time.time()
+    # print(min_price, 'time elapsed: ', end-start)
+
+    # print("year first")
+    # start = time.time()
+    # min_price = column_store_mp.min_price_year_first(year,month,town)
+    # end = time.time()
+    # print(min_price, 'time elapsed: ', end-start)
 
     # NOTE: Uncomment this for testing avg runtime
     column_store = read_csv(file_path, 0)
@@ -128,7 +149,7 @@ def main(args):
         town
     ]  # get the encoded town value
 
-    # column_store_zone_map_num.create_zone_map(16)
+    column_store_zone_map_num.create_zone_map(16)
 
     column_store_zone_map_cat.create_zone_map("flat_type")
 
