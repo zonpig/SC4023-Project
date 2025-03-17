@@ -6,7 +6,7 @@ from column_store import ResalePriceData
 from column_store_encoded import ResalePriceDataEncoded
 from column_store_zone_map_cat import ResalePriceDataZoneMapCat
 from column_store_zone_map_num import ResalePriceDataZoneMapNum
-from column_store_combined import ResalePriceDataCombined
+from column_store_combined_cat import ResalePriceDataCombinedCat
 
 town_map = {
     0: "BEDOK",
@@ -45,7 +45,7 @@ def read_csv(file_path: str, type: int):
     elif type == 3:
         resale_data = ResalePriceDataZoneMapCat()
     elif type == 4:
-        resale_data = ResalePriceDataCombined()
+        resale_data = ResalePriceDataCombinedCat()
 
     with open(file_path, mode="r") as file:
         csv_reader = csv.reader(file)
@@ -82,9 +82,9 @@ def read_csv(file_path: str, type: int):
 
 def main(args):
     # matric number
-    # matric_number = "U2121223J" #Darren
+    matric_number = "U2121223J"  # Darren
     # matric_number = "U2121763H" #Bryan
-    matric_number = "U2122055E"  # Jin Yang
+    # matric_number = "U2122055E" #Jin Yang
 
     last_digit_year = int(matric_number[-2])
     year = year_map[last_digit_year]
@@ -97,67 +97,77 @@ def main(args):
     column_store_encoded = read_csv(file_path, 1)
     column_store_zone_map_num = read_csv(file_path, 2)
     column_store_zone_map_cat = read_csv(file_path, 3)
-    column_store_combined = read_csv(file_path, 4)
+    column_store_combined_cat = read_csv(file_path, 4)
 
     # preprocess
     column_store_encoded.encode_town()
+    column_store_encode_town = column_store_encoded.town_encoder.mappings[
+        town
+    ]  # get the encoded town value
 
     column_store_zone_map_num.create_zone_map(16)
 
     column_store_zone_map_cat.create_zone_map("flat_type")
 
-    column_store_combined.create_zone_map(
+    column_store_combined_cat.create_zone_map(
         "flat_type"
     )  # have to zonemap first to create the rearrange columns, then encode town on that rearrange columns
-    column_store_combined.encode_town()
+    column_store_combined_cat.encode_town()
+    column_store_combined_cat_town = column_store_combined_cat.town_encoder.mappings[
+        town
+    ]  # get the encoded town value
 
     scenarios = {
-        "original": {
-            "col_db": column_store,
-        },
+        "original": {"col_db": column_store, "town": town},
         "categorical_encoded": {
             "col_db": column_store_encoded,
+            "town": column_store_encode_town,
         },
-        "zone_map_num": {
-            "col_db": column_store_zone_map_num,
-        },
-        "zone_map_cat": {
-            "col_db": column_store_zone_map_cat,
-        },
-        "combined": {
-            "col_db": column_store_combined,
+        "zone_map_num": {"col_db": column_store_zone_map_num, "town": town},
+        "zone_map_cat": {"col_db": column_store_zone_map_cat, "town": town},
+        "combined_cat": {
+            "col_db": column_store_combined_cat,
+            "town": column_store_combined_cat_town,
         },
     }
 
     for _ in tqdm(range(args.num_runs), desc="Running repeated runs of queries."):
         for k in scenarios.keys():
+            print(f"Scenario: {k}")
             start_time = time.time()
-            scenarios[k]["col_db"].min_price(year, month, town)
+            x = scenarios[k]["col_db"].min_price(year, month, scenarios[k]["town"])
             end_time = time.time()
             times = scenarios[k].get("min_price", [])
             times.append(end_time - start_time)
             scenarios[k]["min_price"] = times
+            print(f"Min price: {x}")
 
             start_time = time.time()
-            scenarios[k]["col_db"].sd_price(year, month, town)
+            x = scenarios[k]["col_db"].sd_price(year, month, scenarios[k]["town"])
             end_time = time.time()
             times = scenarios[k].get("sd_price", [])
             times.append(end_time - start_time)
             scenarios[k]["sd_price"] = times
+            print(f"SD price: {x}")
 
             start_time = time.time()
-            scenarios[k]["col_db"].avg_price(year, month, town)
+            x = scenarios[k]["col_db"].avg_price(year, month, scenarios[k]["town"])
             end_time = time.time()
             times = scenarios[k].get("avg_price", [])
             times.append(end_time - start_time)
             scenarios[k]["avg_price"] = times
+            print(f"Avg price: {x}")
 
             start_time = time.time()
-            scenarios[k]["col_db"].min_price_per_sqm(year, month, town)
+            x = scenarios[k]["col_db"].min_price_per_sqm(
+                year, month, scenarios[k]["town"]
+            )
             end_time = time.time()
             times = scenarios[k].get("min_price_per_sqm", [])
             times.append(end_time - start_time)
             scenarios[k]["min_price_per_sqm"] = times
+            print(f"Min price per sqm: {x}")
+            print()
 
     print(f"{args.num_runs} runs concluded!")
     print()
