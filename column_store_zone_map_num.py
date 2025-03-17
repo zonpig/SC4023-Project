@@ -363,7 +363,7 @@ class ResalePriceDataZoneMapNum:
             if price_per_sqm < min_price_per_sqm:
                 min_price_per_sqm = price_per_sqm
 
-        if min_price_per_sqm != float("inf"):
+        if min_price_per_sqm == float("inf"):
             query_res = "No Results"
         else:
             query_res = round(min_price_per_sqm, 2)
