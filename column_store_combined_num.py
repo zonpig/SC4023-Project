@@ -14,12 +14,12 @@ from columns import (
     ResalePrice,
 )
 
-from column_preprocess import ZoneMappingNum
+from column_preprocess import ZoneMappingNum, CategoricalEncoder
 from collections import defaultdict
 import pandas as pd
 
 
-class ResalePriceDataZoneMapNum:
+class ResalePriceDataCombinedNum:
     def __init__(self):
         self.columns = {
             "month": Month(),  # Querying
@@ -56,6 +56,11 @@ class ResalePriceDataZoneMapNum:
     def create_zone_map(self, num_zones):
         self.floor_area_sqm_zone_map = ZoneMappingNum("floor_area_sqm", num_zones)
         self.floor_area_sqm_zone_map.fit(self.columns["floor_area_sqm"].data)
+
+    def encode_town(self):
+        self.town_encoder = CategoricalEncoder("town", self.columns["town"].data)
+        self.columns["town"].data = self.town_encoder.transform(self.columns["town"].data)
+
 
     def log_queries(self):
         res = defaultdict(list)
@@ -536,7 +541,7 @@ def main():
     town = town_map[town_index]
 
     file_path = "ResalePricesSingapore.csv"
-    resale_data = ResalePriceDataZoneMapNum()
+    resale_data = ResalePriceDataCombinedNum()
     with open(file_path, mode="r") as file:
         csv_reader = csv.reader(file)
         _ = next(csv_reader)
@@ -546,13 +551,14 @@ def main():
 
     # Creating zone map on flat_type column
     resale_data.create_zone_map(16)
-
+    resale_data.encode_town()
+    encoded_town = resale_data.town_encoder.mappings[town]
 
     #total time to keep track of cummulative timing for 4 individual queries
     total_time = 0
 
     start_time = time.time()
-    min_price = resale_data.min_price(year,month,town)
+    min_price = resale_data.min_price(year,month,encoded_town)
     end_time = time.time()
     print("Minimum price: ", min_price)
     print(f"Time taken for min_price: {end_time - start_time} seconds")
@@ -560,7 +566,7 @@ def main():
     print()
     
     start_time = time.time()
-    sd_price = resale_data.sd_price(year, month, town)
+    sd_price = resale_data.sd_price(year, month, encoded_town)
     end_time = time.time()
     print("StdDev price: ", sd_price)
     print(f"Time taken for sd_price: {end_time - start_time} seconds")
@@ -568,7 +574,7 @@ def main():
     print()
     
     start_time = time.time()
-    avg_price = resale_data.avg_price(year,month,town)
+    avg_price = resale_data.avg_price(year,month,encoded_town)
     end_time = time.time()
     print("Average price: ", avg_price)
     print(f"Time taken for avg_price: {end_time - start_time} seconds")
@@ -576,7 +582,7 @@ def main():
     print()
     
     start_time = time.time()
-    min_price_per_sqm = resale_data.min_price_per_sqm(year,month,town)
+    min_price_per_sqm = resale_data.min_price_per_sqm(year,month,encoded_town)
     end_time = time.time()
     print("Minimum price per sqm: ", min_price_per_sqm)
     print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
@@ -589,7 +595,7 @@ def main():
     
     #shared scan
     start_time = time.time()
-    ss_min_price, ss_sd_price, ss_avg_price, ss_min_price_per_sqm = resale_data.shared_scan(year,month,town)
+    ss_min_price, ss_sd_price, ss_avg_price, ss_min_price_per_sqm = resale_data.shared_scan(year,month,encoded_town)
     end_time = time.time()
     print("Shared Scan - Minimum price: ", ss_min_price)
     print("Shared Scan - Minimum price per sqm: ", ss_sd_price)

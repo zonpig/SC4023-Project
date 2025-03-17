@@ -7,6 +7,7 @@ from column_store_encoded import ResalePriceDataEncoded
 from column_store_zone_map_cat import ResalePriceDataZoneMapCat
 from column_store_zone_map_num import ResalePriceDataZoneMapNum
 from column_store_combined_cat import ResalePriceDataCombinedCat
+from column_store_combined_num import ResalePriceDataCombinedNum
 
 town_map = {
     0: "BEDOK",
@@ -45,6 +46,8 @@ def read_csv(file_path: str, type: int):
     elif type == 3:
         resale_data = ResalePriceDataZoneMapCat()
     elif type == 4:
+        resale_data = ResalePriceDataCombinedNum()
+    elif type == 5:
         resale_data = ResalePriceDataCombinedCat()
 
     with open(file_path, mode="r") as file:
@@ -97,7 +100,8 @@ def main(args):
     column_store_encoded = read_csv(file_path, 1)
     column_store_zone_map_num = read_csv(file_path, 2)
     column_store_zone_map_cat = read_csv(file_path, 3)
-    column_store_combined_cat = read_csv(file_path, 4)
+    column_store_combined_num = read_csv(file_path, 4)
+    column_store_combined_cat = read_csv(file_path, 5)
 
     # preprocess
     column_store_encoded.encode_town()
@@ -108,27 +112,34 @@ def main(args):
     column_store_zone_map_num.create_zone_map(16)
 
     column_store_zone_map_cat.create_zone_map("flat_type")
+    
+    column_store_combined_num.create_zone_map(16)
+    column_store_combined_num.encode_town()
+    column_store_combined_num_town = column_store_combined_num.town_encoder.mappings[town]
 
-    column_store_combined_cat.create_zone_map(
-        "flat_type"
-    )  # have to zonemap first to create the rearrange columns, then encode town on that rearrange columns
+    column_store_combined_cat.create_zone_map("flat_type")  # have to zonemap first to create the rearrange columns, then encode town on that rearrange columns
     column_store_combined_cat.encode_town()
-    column_store_combined_cat_town = column_store_combined_cat.town_encoder.mappings[
-        town
-    ]  # get the encoded town value
+    column_store_combined_cat_town = column_store_combined_cat.town_encoder.mappings[town]  # get the encoded town value
 
     scenarios = {
-        "original": {"col_db": column_store, "town": town},
+        "original": {"col_db": column_store, 
+                     "town": town},
+        
         "categorical_encoded": {
             "col_db": column_store_encoded,
-            "town": column_store_encode_town,
-        },
-        "zone_map_num": {"col_db": column_store_zone_map_num, "town": town},
-        "zone_map_cat": {"col_db": column_store_zone_map_cat, "town": town},
-        "combined_cat": {
-            "col_db": column_store_combined_cat,
-            "town": column_store_combined_cat_town,
-        },
+            "town": column_store_encode_town},
+        
+        "zone_map_num": {"col_db": column_store_zone_map_num, 
+                         "town": town},
+        
+        "zone_map_cat": {"col_db": column_store_zone_map_cat, 
+                         "town": town},
+        
+        "combined_num": {"col_db": column_store_combined_num,
+                         "town": column_store_combined_num_town},
+        
+        "combined_cat": {"col_db": column_store_combined_cat,
+                         "town": column_store_combined_cat_town},
     }
 
     for _ in tqdm(range(args.num_runs), desc="Running repeated runs of queries."):
@@ -159,9 +170,7 @@ def main(args):
             print(f"Avg price: {x}")
 
             start_time = time.time()
-            x = scenarios[k]["col_db"].min_price_per_sqm(
-                year, month, scenarios[k]["town"]
-            )
+            x = scenarios[k]["col_db"].min_price_per_sqm(year, month, scenarios[k]["town"])
             end_time = time.time()
             times = scenarios[k].get("min_price_per_sqm", [])
             times.append(end_time - start_time)
