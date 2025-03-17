@@ -1,5 +1,5 @@
-# import csv
-# import time
+import csv
+import time
 
 from columns import (
     Month,
@@ -92,8 +92,8 @@ class ResalePriceDataZoneMapCat:
         for i in area_position_match:
             rows_scanned[col_idx] += 1
             if (
-                self.columns["month"].data[i]["month"] == month
-                or self.columns["month"].data[i]["month"] == month + 1
+                self.rearranged_columns["month"][i]["month"] == month
+                or self.rearranged_columns["month"][i]["month"] == month + 1
             ):
                 month_position_match.append(i)
         col_idx += 1
@@ -102,7 +102,7 @@ class ResalePriceDataZoneMapCat:
         year_position_match = []
         for i in month_position_match:
             rows_scanned[col_idx] += 1
-            if self.columns["month"].data[i]["year"] == year:
+            if self.rearranged_columns["month"][i]["year"] == year:
                 year_position_match.append(i)
         col_idx += 1
 
@@ -110,7 +110,7 @@ class ResalePriceDataZoneMapCat:
         town_position_match = []
         for i in year_position_match:
             rows_scanned[col_idx] += 1
-            if self.columns["town"].data[i] == town:
+            if self.rearranged_columns["town"][i] == town:
                 town_position_match.append(i)
         col_idx += 1
 
@@ -172,8 +172,8 @@ class ResalePriceDataZoneMapCat:
         for i in area_position_match:
             rows_scanned[col_idx] += 1
             if (
-                self.columns["month"].data[i]["month"] == month
-                or self.columns["month"].data[i]["month"] == month + 1
+                self.rearranged_columns["month"][i]["month"] == month
+                or self.rearranged_columns["month"][i]["month"] == month + 1
             ):
                 month_position_match.append(i)
         col_idx += 1
@@ -182,7 +182,7 @@ class ResalePriceDataZoneMapCat:
         year_position_match = []
         for i in month_position_match:
             rows_scanned[col_idx] += 1
-            if self.columns["month"].data[i]["year"] == year:
+            if self.rearranged_columns["month"][i]["year"] == year:
                 year_position_match.append(i)
         col_idx += 1
 
@@ -190,7 +190,7 @@ class ResalePriceDataZoneMapCat:
         town_position_match = []
         for i in year_position_match:
             rows_scanned[col_idx] += 1
-            if self.columns["town"].data[i] == town:
+            if self.rearranged_columns["town"][i] == town:
                 town_position_match.append(i)
         col_idx += 1
 
@@ -257,8 +257,8 @@ class ResalePriceDataZoneMapCat:
         for i in area_position_match:
             rows_scanned[col_idx] += 1
             if (
-                self.columns["month"].data[i]["month"] == month
-                or self.columns["month"].data[i]["month"] == month + 1
+                self.rearranged_columns["month"][i]["month"] == month
+                or self.rearranged_columns["month"][i]["month"] == month + 1
             ):
                 month_position_match.append(i)
         col_idx += 1
@@ -267,7 +267,7 @@ class ResalePriceDataZoneMapCat:
         year_position_match = []
         for i in month_position_match:
             rows_scanned[col_idx] += 1
-            if self.columns["month"].data[i]["year"] == year:
+            if self.rearranged_columns["month"][i]["year"] == year:
                 year_position_match.append(i)
         col_idx += 1
 
@@ -275,7 +275,7 @@ class ResalePriceDataZoneMapCat:
         town_position_match = []
         for i in year_position_match:
             rows_scanned[col_idx] += 1
-            if self.columns["town"].data[i] == town:
+            if self.rearranged_columns["town"][i] == town:
                 town_position_match.append(i)
         col_idx += 1
 
@@ -340,8 +340,8 @@ class ResalePriceDataZoneMapCat:
         for i in area_position_match:
             rows_scanned[col_idx] += 1
             if (
-                self.columns["month"].data[i]["month"] == month
-                or self.columns["month"].data[i]["month"] == month + 1
+                self.rearranged_columns["month"][i]["month"] == month
+                or self.rearranged_columns["month"][i]["month"] == month + 1
             ):
                 month_position_match.append(i)
         col_idx += 1
@@ -350,7 +350,7 @@ class ResalePriceDataZoneMapCat:
         year_position_match = []
         for i in month_position_match:
             rows_scanned[col_idx] += 1
-            if self.columns["month"].data[i]["year"] == year:
+            if self.rearranged_columns["month"][i]["year"] == year:
                 year_position_match.append(i)
         col_idx += 1
 
@@ -358,7 +358,7 @@ class ResalePriceDataZoneMapCat:
         town_position_match = []
         for i in year_position_match:
             rows_scanned[col_idx] += 1
-            if self.columns["town"].data[i] == town:
+            if self.rearranged_columns["town"][i] == town:
                 town_position_match.append(i)
         col_idx += 1
 
@@ -371,7 +371,7 @@ class ResalePriceDataZoneMapCat:
             if price_per_sqm < min_price_per_sqm:
                 min_price_per_sqm = price_per_sqm
 
-        if min_price_per_sqm != float("inf"):
+        if min_price_per_sqm == float("inf"):
             query_res = "No Results"
         else:
             query_res = round(min_price_per_sqm, 2)
@@ -397,98 +397,94 @@ class ResalePriceDataZoneMapCat:
         return query_res
 
 
-# def main():
-#     town_map = {
-#     0: "BEDOK",
-#     1: "BUKIT PANJANG",
-#     2: "CLEMENTI",
-#     3: "CHOA CHU KANG",
-#     4: "HOUGANG",
-#     5: "JURONG WEST",
-#     6: "PASIR RIS",
-#     7: "TAMPINES",
-#     8: "WOODLANDS",
-#     9: "YISHUN",
-#     }
+def main():
+    town_map = {
+        0: "BEDOK",
+        1: "BUKIT PANJANG",
+        2: "CLEMENTI",
+        3: "CHOA CHU KANG",
+        4: "HOUGANG",
+        5: "JURONG WEST",
+        6: "PASIR RIS",
+        7: "TAMPINES",
+        8: "WOODLANDS",
+        9: "YISHUN",
+    }
 
-#     year_map = {
-#         0: 2020,
-#         1: 2021,
-#         2: 2022,
-#         3: 2023,
-#         4: 2014,
-#         5: 2015,
-#         6: 2016,
-#         7: 2017,
-#         8: 2018,
-#         9: 2019,
-#     }
+    year_map = {
+        0: 2020,
+        1: 2021,
+        2: 2022,
+        3: 2023,
+        4: 2014,
+        5: 2015,
+        6: 2016,
+        7: 2017,
+        8: 2018,
+        9: 2019,
+    }
 
-#     # matric number
-#     matric_number = "U2121223J" #Darren
-#     # matric_number = "U2121763H" #Bryan
-#     # matric_number = "U2122055E" #Jin Yang
+    # matric number
+    matric_number = "U2121223J"  # Darren
+    # matric_number = "U2121763H" #Bryan
+    # matric_number = "U2122055E" #Jin Yang
 
-#     last_digit_year = int(matric_number[-2])
-#     year = year_map[last_digit_year]
-#     month = int(matric_number[-3])
-#     town_index = int(matric_number[-4])
-#     town = town_map[town_index]
+    last_digit_year = int(matric_number[-2])
+    year = year_map[last_digit_year]
+    month = int(matric_number[-3])
+    town_index = int(matric_number[-4])
+    town = town_map[town_index]
 
-#     file_path = "ResalePricesSingapore.csv"
-#     resale_data = ResalePriceDataZoneMapCat()
-#     with open(file_path, mode="r") as file:
-#         csv_reader = csv.reader(file)
-#         _ = next(csv_reader)
-#         for row in csv_reader:
-#             resale_data.add_data(row)
+    file_path = "ResalePricesSingapore.csv"
+    resale_data = ResalePriceDataZoneMapCat()
+    with open(file_path, mode="r") as file:
+        csv_reader = csv.reader(file)
+        _ = next(csv_reader)
+        for row in csv_reader:
+            resale_data.add_data(row)
 
+    # Creating zone map on flat_type column
+    resale_data.create_zone_map("flat_type")
 
-#     # Creating zone map on flat_type column
-#     resale_data.create_zone_map("flat_type")
+    # checking rearranged col attribute
+    # print("Accessing rearranged columns in new attribute:")
+    # print(f"Length of rearranged columns: {sum(len(v) for v in resale_data.rearranged_columns.values())}")
+    # print(resale_data.rearranged_columns.keys())
+    # print(resale_data.rearranged_columns["resale_price"])
+    # print(type(resale_data.rearranged_columns["resale_price"][0]))
+    # print(type(resale_data.columns["resale_price"].data[0]))
+    # print(resale_data.columns["resale_price"].data)
+    # print()
 
-#     # checking rearranged col attribute
-#     # print("Accessing rearranged columns in new attribute:")
-#     # print(f"Length of rearranged columns: {sum(len(v) for v in resale_data.rearranged_columns.values())}")
-#     # print(resale_data.rearranged_columns.keys())
-#     # print(resale_data.rearranged_columns["resale_price"])
-#     # print(type(resale_data.rearranged_columns["resale_price"][0]))
-#     # print(type(resale_data.columns["resale_price"].data[0]))
-#     # print(resale_data.columns["resale_price"].data)
-#     # print()
+    # checking zone mapping attribute
+    # print("Accessing zone mapping in new attribute:")
+    # for k,v in resale_data.zone_mapping.items():
+    #     print(k,v)
 
-#     # checking zone mapping attribute
-#     # print("Accessing zone mapping in new attribute:")
-#     # for k,v in resale_data.zone_mapping.items():
-#     #     print(k,v)
+    start_time = time.time()
+    min_price = resale_data.min_price(year, month, town)
+    end_time = time.time()
+    print("Minimum price: ", min_price)
+    print(f"Time taken for min_price: {end_time - start_time} seconds")
 
+    start_time = time.time()
+    sd_price = resale_data.sd_price(year, month, town)
+    end_time = time.time()
+    print("StdDev price: ", sd_price)
+    print(f"Time taken for sd_price: {end_time - start_time} seconds")
 
-#     start_time = time.time()
-#     min_price = resale_data.min_price(year,month,town)
-#     end_time = time.time()
-#     print("Minimum price: ", min_price)
-#     print(f"Time taken for min_price: {end_time - start_time} seconds")
+    start_time = time.time()
+    avg_price = resale_data.avg_price(year, month, town)
+    end_time = time.time()
+    print("Average price: ", avg_price)
+    print(f"Time taken for avg_price: {end_time - start_time} seconds")
 
-
-#     start_time = time.time()
-#     sd_price = resale_data.sd_price(year, month, town)
-#     end_time = time.time()
-#     print("StdDev price: ", sd_price)
-#     print(f"Time taken for sd_price: {end_time - start_time} seconds")
-
-
-#     start_time = time.time()
-#     avg_price = resale_data.avg_price(year,month,town)
-#     end_time = time.time()
-#     print("Average price: ", avg_price)
-#     print(f"Time taken for avg_price: {end_time - start_time} seconds")
-
-#     start_time = time.time()
-#     min_price_per_sqm = resale_data.min_price_per_sqm(year,month,town)
-#     end_time = time.time()
-#     print("Minimum price per sqm: ", min_price_per_sqm)
-#     print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
+    start_time = time.time()
+    min_price_per_sqm = resale_data.min_price_per_sqm(year, month, town)
+    end_time = time.time()
+    print("Minimum price per sqm: ", min_price_per_sqm)
+    print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
