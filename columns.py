@@ -13,8 +13,15 @@ class Month(BaseColumn):
         self.data: list[dict[str, int]] = []
 
     def add_data(self, val: str):
-        year, month = map(int, val.split("-"))
-        self.data.append({"year": int(year), "month": int(month)})
+        
+        if val:
+            year, month = map(int, val.split("-"))
+            self.data.append({"year": int(year), "month": int(month)})
+        
+        #null value
+        else:
+            self.data.append("#NULL")
+            
 
 class Town(BaseColumn):
     def __init__(self):
@@ -22,7 +29,12 @@ class Town(BaseColumn):
         self.data: List[str] = []
 
     def add_data(self, val: str):
-        self.data.append(val)
+        if val:
+            self.data.append(val)
+            
+        #null value
+        else:
+            self.data.append("#NULL")
 
 class TownEncoded(BaseColumn):
     def __init__(self):
@@ -30,7 +42,12 @@ class TownEncoded(BaseColumn):
         self.data: List[Union[str, int]] = []
 
     def add_data(self, val: Union[str, int]):
-        self.data.append(val)
+        if val:
+            self.data.append(val)
+        
+        #null value
+        else:
+            self.data.append("#NULL")
 
 class FlatType(BaseColumn):
     def __init__(self):
@@ -38,7 +55,12 @@ class FlatType(BaseColumn):
         self.data: List[str] = []
 
     def add_data(self, val: str):
-        self.data.append(val)
+        if val:
+            self.data.append(val)
+            
+        #null value
+        else:
+            self.data.append("#NULL")
 
 class Block(BaseColumn):
     def __init__(self):
@@ -46,7 +68,12 @@ class Block(BaseColumn):
         self.data: List[str] = []
 
     def add_data(self, val: str):
-        self.data.append(val)
+        if val:
+            self.data.append(val)
+
+        #null value
+        else:
+            self.data.append("#NULL")
 
 class StreetName(BaseColumn):
     def __init__(self):
@@ -54,7 +81,12 @@ class StreetName(BaseColumn):
         self.data: List[str] = []
 
     def add_data(self, val: str):
-        self.data.append(val)
+        if val:
+            self.data.append(val)
+            
+        #null value
+        else:
+            self.data.append("#NULL")
 
 class StoreyRange(BaseColumn):
     def __init__(self):
@@ -62,7 +94,12 @@ class StoreyRange(BaseColumn):
         self.data: List[str] = []
 
     def add_data(self, val: str):
-        self.data.append(val)
+        if val:
+            self.data.append(val)
+            
+        #null value
+        else:
+            self.data.append("#NULL")
 
 class FloorAreaSqm(BaseColumn):
     def __init__(self):
@@ -70,7 +107,12 @@ class FloorAreaSqm(BaseColumn):
         self.data: List[float] = []
 
     def add_data(self, val: float):
-        self.data.append(float(val))
+        if val:
+            self.data.append(float(val))
+            
+        #null value
+        else:
+            self.data.append("#NULL")
 
 class FlatModel(BaseColumn):
     def __init__(self):
@@ -78,7 +120,12 @@ class FlatModel(BaseColumn):
         self.data: List[str] = []
 
     def add_data(self, val: str):
-        self.data.append(val)
+        if val:
+            self.data.append(val)
+
+        #null value
+        else:
+            self.data.append("#NULL")
 
 class LeaseCommenceDate(BaseColumn):
     def __init__(self):
@@ -86,7 +133,12 @@ class LeaseCommenceDate(BaseColumn):
         self.data: List[int] = []
 
     def add_data(self, val: int):
-        self.data.append(int(val))
+        if val:
+            self.data.append(int(val))
+
+        #null value
+        else:
+            self.data.append("#NULL")
 
 class ResalePrice(BaseColumn):
     def __init__(self):
@@ -94,4 +146,9 @@ class ResalePrice(BaseColumn):
         self.data: List[float] = []
 
     def add_data(self, val: float):
-        self.data.append(float(val))
+        if val:
+            self.data.append(float(val))
+            
+        #null value
+        else:
+            self.data.append("#NULL")
