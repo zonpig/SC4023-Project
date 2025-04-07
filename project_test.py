@@ -43,9 +43,10 @@ year_map = {
     9: 2019,
 }
 
-def read_csv(file_path: str, type: int,
-             start_idx: int, end_idx: int,
-             headers: list[str]):
+
+def read_csv(
+    file_path: str, type: int, start_idx: int, end_idx: int, headers: list[str]
+):
     if type == 0:
         resale_data = ResalePriceData()
     elif type == 1:
@@ -63,28 +64,27 @@ def read_csv(file_path: str, type: int,
 
     nrows = end_idx - start_idx + 1
     df = pd.read_csv(
-            file_path,
-            skiprows=range(0, start_idx + 1),
-            nrows=nrows,
-            header=None,
-            names=headers,
-        )
+        file_path,
+        skiprows=range(0, start_idx + 1),
+        nrows=nrows,
+        header=None,
+        names=headers,
+    )
 
     for row in df.itertuples(index=False):
-            row_values = list(row)  # Convert namedtuple to list
-            resale_data.add_data(row_values)
+        row_values = list(row)  # Convert namedtuple to list
+        resale_data.add_data(row_values)
     return resale_data
 
-def get_csv_headers(file_path: str, encoding='utf-8'):
-    
-    with open(file_path, mode='r', encoding=encoding) as f:
+
+def get_csv_headers(file_path: str, encoding="utf-8"):
+    with open(file_path, mode="r", encoding=encoding) as f:
         reader = csv.reader(f)
         header = next(reader)  # Skip header
     return header
 
-def split_csv(file_path: str,
-              max_memory_mb = None,
-              encoding = 'utf-8'):
+
+def split_csv(file_path: str, max_memory_mb=None, encoding="utf-8"):
     """
     Yield row index ranges ([start, end]) from a CSV that can fit within memory limit.
 
@@ -97,19 +97,19 @@ def split_csv(file_path: str,
         Tuple[int, int]: (start_index, end_index) of each chunk
     """
     if max_memory_mb is None:
-        available_memory = psutil.virtual_memory().available / (1024 ** 2)
-        max_memory_mb = available_memory * 0.01 # use 80% of available memory
+        available_memory = psutil.virtual_memory().available / (1024**2)
+        max_memory_mb = available_memory * 0.10  # use 80% of available memory
 
     chunk_start = 1
     chunk_memory = 0.0
     current_index = 1
     chunk_indices = []
-    
-    with open(file_path, mode='r', encoding=encoding) as f:
+
+    with open(file_path, mode="r", encoding=encoding) as f:
         reader = csv.reader(f)
         header = next(reader)  # Skip header
         for row in reader:
-            row_memory = sys.getsizeof(row) / (1024 ** 2)  # in MB
+            row_memory = sys.getsizeof(row) / (1024**2)  # in MB
 
             if chunk_memory + row_memory > max_memory_mb:
                 chunk_indices.append((chunk_start, current_index - 1))
@@ -125,6 +125,7 @@ def split_csv(file_path: str,
 
     return chunk_indices
 
+
 # You are expected to write a program to manage the data in a column-oriented manner,
 # including data storage and processing. Your program should first receive queries, scan
 # the data columns to find matched lines, and compute the results according to associated
@@ -136,6 +137,7 @@ def split_csv(file_path: str,
 # c) the matched town depends on the third last digit of the matriculation number as Table 1 presents;
 # d) there are four query contents in total that are listed in Table 2, and the area requirement (≥80m2) is applicable to all these contents.
 # the area requirement (≥80m2) is applicable to all these contents
+
 
 def main(args):
     # matric number
@@ -150,49 +152,82 @@ def main(args):
     town = town_map[town_index]
 
     file_path = "ResalePricesSingapore.csv"
- 
+
     # Initialize the defaultdict with empty dictionaries as default values
     final_res = defaultdict(dict)
-    scenarios = ['original', 'categorical_encoded', 'zone_map_num', 'zone_map_cat', 'combined_num', 'combined_cat']
+    scenarios = [
+        "original",
+        "categorical_encoded",
+        "zone_map_num",
+        "zone_map_cat",
+        "combined_num",
+        "combined_cat",
+    ]
     # Add your keys from the 'scenarios' dictionary
     for key in scenarios:
         final_res[key]  # This will create a default empty dictionary for each key
-    
+
     splits = split_csv(file_path)
     print(splits)
     csv_headers = get_csv_headers(file_path)
-    for (start_idx, end_idx) in splits:
-        
-        column_store = read_csv(file_path, 0, start_idx=start_idx, end_idx=end_idx, headers=csv_headers)
-        column_store_encoded = read_csv(file_path, 1, start_idx=start_idx, end_idx=end_idx, headers=csv_headers)
-        column_store_zone_map_num = read_csv(file_path, 2, start_idx=start_idx, end_idx=end_idx, headers=csv_headers)
-        column_store_zone_map_cat = read_csv(file_path, 3, start_idx=start_idx, end_idx=end_idx, headers=csv_headers)
-        column_store_combined_num = read_csv(file_path, 4, start_idx=start_idx, end_idx=end_idx, headers=csv_headers)
-        column_store_combined_cat = read_csv(file_path, 5, start_idx=start_idx, end_idx=end_idx, headers=csv_headers)
+    for start_idx, end_idx in splits:
+        column_store = read_csv(
+            file_path, 0, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
+        )
+        column_store_encoded = read_csv(
+            file_path, 1, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
+        )
+        column_store_zone_map_num = read_csv(
+            file_path, 2, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
+        )
+        column_store_zone_map_cat = read_csv(
+            file_path, 3, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
+        )
+        column_store_combined_num = read_csv(
+            file_path, 4, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
+        )
+        column_store_combined_cat = read_csv(
+            file_path, 5, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
+        )
 
         # preprocess
         column_store_encoded.encode_town()
-        column_store_encode_town = column_store_encoded.town_encoder.mappings[
-            town
-        ]  # get the encoded town value
+        if town not in column_store_encoded.town_encoder.mappings:
+            column_store_encode_town = len(column_store_encoded.town_encoder.mappings)
+        else:
+            column_store_encode_town = column_store_encoded.town_encoder.mappings[
+                town
+            ]  # get the encoded town value
 
         column_store_zone_map_num.create_zone_map(16)
 
         column_store_zone_map_cat.create_zone_map("flat_type")
 
         column_store_combined_num.create_zone_map(16)
+
         column_store_combined_num.encode_town()
-        column_store_combined_num_town = column_store_combined_num.town_encoder.mappings[
-            town
-        ]
+        if town not in column_store_combined_num.town_encoder.mappings:
+            column_store_combined_num_town = len(
+                column_store_combined_num.town_encoder.mappings
+            )
+        else:
+            column_store_combined_num_town = (
+                column_store_combined_num.town_encoder.mappings[town]
+            )
 
         column_store_combined_cat.create_zone_map(
             "flat_type"
         )  # have to zonemap first to create the rearrange columns, then encode town on that rearrange columns
         column_store_combined_cat.encode_town()
-        column_store_combined_cat_town = column_store_combined_cat.town_encoder.mappings[
-            town
-        ]  # get the encoded town value
+
+        if town not in column_store_combined_cat.town_encoder.mappings:
+            column_store_combined_cat_town = len(
+                column_store_combined_cat.town_encoder.mappings
+            )
+        else:
+            column_store_combined_cat_town = (
+                column_store_combined_cat.town_encoder.mappings[town]
+            )  # get the encoded town value
 
         scenarios = {
             "original": {"col_db": column_store, "town": town},
@@ -232,45 +267,77 @@ def main(args):
             final_res[k]["avg_price"] = res
 
             print(f"Scenario: {k}")
-            x = scenarios[k]["col_db"].min_price_per_sqm(year, month, scenarios[k]["town"])
+            x = scenarios[k]["col_db"].min_price_per_sqm(
+                year, month, scenarios[k]["town"]
+            )
             res = final_res[k].get("min_price_per_sqm", [])
             res.append(x)
             final_res[k]["min_price_per_sqm"] = res
 
-    original_res = final_res['original']
-    chunk_sizes = [end-start+1 for start,end in splits]
+    original_res = final_res["original"]
+    chunk_sizes = [end - start + 1 for start, end in splits]
     total_size = [splits[-1][-1], splits[-1][-1], splits[-1][-1], splits[-1][-1]]
 
     keys = [k for k in original_res.keys()]
     for out_idx, k in enumerate(keys):
         cpy = original_res[k].copy()
         cur_list = []
-        for idx,val in enumerate(cpy):
-            if val == "No Results":
+        for idx, val in enumerate(cpy):
+            if isinstance(val, tuple):
+                if len(val) == 2:
+                    _, row_used = val
+                elif len(val) == 3:
+                    _, row_used, _ = val
+                if row_used == 0:
+                    total_size[out_idx] -= chunk_sizes[idx]
+                    continue
+                else:
+                    cur_list.append(val)
+            elif val == "No Results":
                 total_size[out_idx] -= chunk_sizes[idx]
             else:
                 cur_list.append(val)
 
         original_res[k] = cur_list
-    
+
     # STEP: Determine min price
-    min_price = min(original_res['min_price'])        
+    min_price = min(original_res["min_price"])
 
     # STEP: Determine sd
-    sd_price =  np.sqrt(sum((size) * (float(stdev) ** 2) for stdev, size in zip(original_res['sd_price'], chunk_sizes)) / total_size[1])
+    # sd_price = np.sqrt(
+    #     sum((stdev**2) * row_used for stdev, row_used in original_res["sd_price"])
+    #     / sum(row_used for _, row_used in original_res["sd_price"])
+    # )
+    numerator = 0
+    total_n = 0
+
+    # First calculate the overall mean
+    overall_sum = sum(mean * n for _, n, mean in original_res["sd_price"])
+    overall_n = sum(n for _, n, _ in original_res["sd_price"])
+    overall_mean = overall_sum / overall_n
+
+    # Now calculate the total variance
+    for sd, n, mean in original_res["sd_price"]:
+        numerator += (n - 1) * (sd**2) + n * ((mean - overall_mean) ** 2)
+        total_n += n
+
+    combined_variance = numerator / (total_n - 1)
+    sd_price = np.sqrt(combined_variance)
 
     # STEP: Determine average
-    avg_price = sum([avg*size for avg,size in zip(original_res['avg_price'], chunk_sizes)])/total_size[2]
+    avg_price = sum(
+        avg * row_used for avg, row_used in original_res["avg_price"]
+    ) / sum(row_used for _, row_used in original_res["avg_price"])
 
     # STEP: Determine min_price_per_sqm
-    min_price_per_sqm = min(original_res['min_price_per_sqm'])
+    min_price_per_sqm = min(original_res["min_price_per_sqm"])
 
     scan_results = {
         "Minimum Price": min_price,
         "Standard Deviation of Price": sd_price,
         "Average Price": avg_price,
-        "Minimum Price per Square Meter": min_price_per_sqm
-    }    
+        "Minimum Price per Square Meter": min_price_per_sqm,
+    }
 
     results = [
         {

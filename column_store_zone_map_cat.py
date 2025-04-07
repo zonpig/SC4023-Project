@@ -96,13 +96,17 @@ class ResalePriceDataZoneMapCat(ResalePriceData):
             if self.rearranged_columns["resale_price"][i] != "#NULL"
         ]
         if not prices:
-            return "No Results"
+            query_res = "No Results"
+            row_used = 0
+            mean_price = "No Results"
         else:
             mean_price = sum(prices) / len(prices)
             variance = sum((price - mean_price) ** 2 for price in prices) / (
                 len(prices) - 1
             )
-            return round(variance**0.5, 2)
+            query_res = round(variance**0.5, 2)
+            row_used = len(prices)
+        return query_res, row_used, mean_price
 
     # Standard Deviation of Price
     def sd_price(self, year, month, town, log_query=False):
@@ -126,10 +130,12 @@ class ResalePriceDataZoneMapCat(ResalePriceData):
         ]
         if not prices:
             query_res = "No Results"
+            row_used = 0
         else:
             mean_price = sum(prices) / len(prices)
             query_res = round(mean_price, 2)
-        return query_res
+            row_used = len(prices)
+        return query_res, row_used
 
     # Average Price
     def avg_price(self, year, month, town, log_query=False):
