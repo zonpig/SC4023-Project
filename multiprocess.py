@@ -12,6 +12,9 @@ def worker(column, indices, criterions, prev_matched_idxs=None):
     '''  
 
     matched_idxs = []
+    if prev_matched_idxs is not None:
+        prev_matched_idxs = set(prev_matched_idxs)
+    
     # NOTE: we first iterate across each indices range
     for start_idx, end_idx in indices:
         # NOTE: we iterate over each idx in each range
