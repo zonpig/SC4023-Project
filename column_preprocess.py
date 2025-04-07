@@ -48,6 +48,34 @@ class ZoneMappingNum:
             zones.append([min_val, max_val])
         self.zones = {k: v for k, v in enumerate(zones)}
 
+class BestZoneMappingNum:
+    def __init__(
+        self,
+        col_name,
+        num_zones,
+    ):
+        """
+        Args:
+            col_name: str
+            num_zones: int, number of zones to divide
+        """
+        self.col_name = col_name
+        self.num_zones = num_zones
+        self.rows_per_zone = None
+        self.zones = {}
+
+    # NOTE: Instead of storing the zones in a dict where key is zone_idx and value is [zone_min, zone_max],
+    # we store the idx range as a string consisting of f'{start_idx}-{end_idx}' and value is [zone_min, zone_max]
+    def fit(self, data):
+        N = len(data)
+        self.rows_per_zone = N // self.num_zones
+        self.zones = {}
+        for i in range(0, N, self.rows_per_zone):
+            start_idx = i
+            end_idx = min(N, i + self.rows_per_zone)
+            zone_vals = data[start_idx : end_idx]
+            min_val, max_val = min(zone_vals), max(zone_vals)
+            self.zones[f'{start_idx}-{end_idx}'] = [min_val,max_val]
 
 class ZoneMappingCat:
 
