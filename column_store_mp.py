@@ -1,18 +1,7 @@
 # import csv
 # import time
 
-from columns import (
-    Month,
-    Town,
-    FlatType,
-    Block,
-    StreetName,
-    StoreyRange,
-    FloorAreaSqm,
-    FlatModel,
-    LeaseCommenceDate,
-    ResalePrice,
-)
+from column_store import ResalePriceData
 
 from multiprocessing import Pool, cpu_count
 from multiprocess import worker, parallel_processing
@@ -20,46 +9,13 @@ import csv
 import time
 import pandas as pd
 import operator
-from concurrent.futures import ThreadPoolExecutor
 
 
-class ResalePriceDataMP:
-    def __init__(self):
-        self.columns = {
-            "month": Month(),  # Querying
-            "town": Town(),  # Querying
-            "flat_type": FlatType(),
-            "block": Block(),
-            "street_name": StreetName(),
-            "storey_range": StoreyRange(),
-            "floor_area_sqm": FloorAreaSqm(),  # Querying
-            "flat_model": FlatModel(),
-            "lease_commence_date": LeaseCommenceDate(),
-            "resale_price": ResalePrice(),  # Querying
-        }
-
-    def add_data(self, row):
-        for i, col in enumerate(self.columns.keys()):
-            self.columns[col].add_data(row[i])
-
-    def __str__(self):
-        return (
-            f"Months: {self.columns['month'].data}\n"
-            f"Towns: {self.columns['town'].data}\n"
-            f"Flat Types: {self.columns['flat_type'].data}\n"
-            f"Blocks: {self.columns['block'].data}\n"
-            f"Street Names: {self.columns['street_name'].data}\n"
-            f"Storey Ranges: {self.columns['storey_range'].data}\n"
-            f"Floor Areas (sqm): {self.columns['floor_area_sqm'].data}\n"
-            f"Flat Models: {self.columns['flat_model'].data}\n"
-            f"Lease Commence Dates: {self.columns['lease_commence_date'].data}\n"
-            f"Resale Prices: {self.columns['resale_price'].data}\n"
-        )
-    
+class ResalePriceDataMP(ResalePriceData):
     # Minimum Price
     def min_price(self, year, month, town):
         min_price = float("inf")
-        
+
         # STEP: Get floor_area_sqm
         area_position_match = parallel_processing(
             self.columns["floor_area_sqm"].data, criterions={"uni": [(operator.ge, 80)]}
@@ -107,10 +63,9 @@ class ResalePriceDataMP:
 
     # Standard Deviation of Price
     def sd_price(self, year, month, town, log_query=False):
-
         # STEP: Get area
         area_position_match = parallel_processing(
-            self.columns['floor_area_sqm'].data,  criterions={"uni": [(operator.ge, 80)]}
+            self.columns["floor_area_sqm"].data, criterions={"uni": [(operator.ge, 80)]}
         )
         months = [
             self.columns["month"].data[i]["month"]
@@ -157,15 +112,14 @@ class ResalePriceDataMP:
                 len(prices) - 1
             )
             query_res = round(variance**0.5, 2)
-        
+
         return query_res
 
     # Average Price
     def avg_price(self, year, month, town, log_query=False):
-
         # STEP: Get area
         area_position_match = parallel_processing(
-            self.columns['floor_area_sqm'].data,  criterions={"uni": [(operator.ge, 80)]}
+            self.columns["floor_area_sqm"].data, criterions={"uni": [(operator.ge, 80)]}
         )
         months = [
             self.columns["month"].data[i]["month"]
@@ -175,7 +129,7 @@ class ResalePriceDataMP:
             self.columns["month"].data[i]["year"]
             for i in range(len(self.columns["month"].data))
         ]
-        
+
         # STEP: Get year
         year_position_match = parallel_processing(
             years,
@@ -218,7 +172,7 @@ class ResalePriceDataMP:
 
         # STEP: Get area
         area_position_match = parallel_processing(
-            self.columns['floor_area_sqm'].data,  criterions={"uni": [(operator.ge, 80)]}
+            self.columns["floor_area_sqm"].data, criterions={"uni": [(operator.ge, 80)]}
         )
         months = [
             self.columns["month"].data[i]["month"]
@@ -228,7 +182,7 @@ class ResalePriceDataMP:
             self.columns["month"].data[i]["year"]
             for i in range(len(self.columns["month"].data))
         ]
-        
+
         # STEP: Get year
         year_position_match = parallel_processing(
             years,
@@ -270,19 +224,20 @@ class ResalePriceDataMP:
             query_res = round(min_price_per_sqm, 2)
 
         return query_res
-    
+
+
 def main():
     town_map = {
-    0: "BEDOK",
-    1: "BUKIT PANJANG",
-    2: "CLEMENTI",
-    3: "CHOA CHU KANG",
-    4: "HOUGANG",
-    5: "JURONG WEST",
-    6: "PASIR RIS",
-    7: "TAMPINES",
-    8: "WOODLANDS",
-    9: "YISHUN",
+        0: "BEDOK",
+        1: "BUKIT PANJANG",
+        2: "CLEMENTI",
+        3: "CHOA CHU KANG",
+        4: "HOUGANG",
+        5: "JURONG WEST",
+        6: "PASIR RIS",
+        7: "TAMPINES",
+        8: "WOODLANDS",
+        9: "YISHUN",
     }
 
     year_map = {
@@ -299,7 +254,7 @@ def main():
     }
 
     # matric number
-    matric_number = "U2121223J" #Darren
+    matric_number = "U2121223J"  # Darren
     # matric_number = "U2121763H" #Bryan
     # matric_number = "U2122055E" #Jin Yang
 
@@ -317,40 +272,41 @@ def main():
         for row in csv_reader:
             resale_data.add_data(row)
 
-    #total time to keep track of cummulative timing for 4 individual queries
+    # total time to keep track of cummulative timing for 4 individual queries
     total_time = 0
 
     start_time = time.time()
-    min_price = resale_data.min_price(year,month,town)
+    min_price = resale_data.min_price(year, month, town)
     end_time = time.time()
     print("Minimum price: ", min_price)
     print(f"Time taken for min_price: {end_time - start_time} seconds")
-    total_time += (end_time - start_time)
+    total_time += end_time - start_time
     print()
-    
+
     start_time = time.time()
     sd_price = resale_data.sd_price(year, month, town)
     end_time = time.time()
     print("StdDev price: ", sd_price)
     print(f"Time taken for sd_price: {end_time - start_time} seconds")
-    total_time += (end_time - start_time)
+    total_time += end_time - start_time
     print()
-    
+
     start_time = time.time()
-    avg_price = resale_data.avg_price(year,month,town)
+    avg_price = resale_data.avg_price(year, month, town)
     end_time = time.time()
     print("Average price: ", avg_price)
     print(f"Time taken for avg_price: {end_time - start_time} seconds")
-    total_time += (end_time - start_time)
+    total_time += end_time - start_time
     print()
-    
+
     start_time = time.time()
-    min_price_per_sqm = resale_data.min_price_per_sqm(year,month,town)
+    min_price_per_sqm = resale_data.min_price_per_sqm(year, month, town)
     end_time = time.time()
     print("Minimum price per sqm: ", min_price_per_sqm)
     print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
-    total_time += (end_time - start_time)
-    print()    
+    total_time += end_time - start_time
+    print()
+
 
 if __name__ == "__main__":
-    main()        
+    main()

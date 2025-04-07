@@ -58,19 +58,11 @@ def read_csv(file_path: str, type: int):
         _ = next(csv_reader)
         for row in csv_reader:
             resale_data.add_data(row)
-            # resale_data.add_data(
-            #     month=row[0],
-            #     town=row[1],
-            #     flat_type=row[2],
-            #     block=row[3],
-            #     street_name=row[4],
-            #     storey_range=row[5],
-            #     floor_area_sqm=float(row[6]),
-            #     flat_model=row[7],
-            #     lease_commence_date=int(row[8]),
-            #     resale_price=float(row[9]),
-            # )
     return resale_data
+
+
+def split_csv(file_path: str):
+    # Find the size of the csv file and see if it can fit into main memory. If it cannot then split the file using the number of rows until the splits can fit into main memory
 
 
 # You are expected to write a program to manage the data in a column-oriented manner,
@@ -99,8 +91,13 @@ def main(args):
     town = town_map[town_index]
 
     file_path = "ResalePricesSingapore.csv"
-
+ 
     # NOTE: Uncomment this for testing avg runtime
+    
+    splits = split_csv(file_path)
+    
+    
+    
     column_store = read_csv(file_path, 0)
     column_store_encoded = read_csv(file_path, 1)
     column_store_zone_map_num = read_csv(file_path, 2)
@@ -209,25 +206,25 @@ def main(args):
             print("Scenario: ", k)
             N = args.num_runs
             print(
-                f"Avg time taken for min_price query: {sum(scenarios[k]['min_price'])/N}"
+                f"Avg time taken for min_price query: {sum(scenarios[k]['min_price']) / N}"
             )
             print(
-                f"Avg time taken for sd_price query: {sum(scenarios[k]['sd_price'])/N}"
+                f"Avg time taken for sd_price query: {sum(scenarios[k]['sd_price']) / N}"
             )
             print(
-                f"Avg time taken for avg_price query: {sum(scenarios[k]['avg_price'])/N}"
+                f"Avg time taken for avg_price query: {sum(scenarios[k]['avg_price']) / N}"
             )
             print(
-                f"Avg time taken for min_price_per_sqm query: {sum(scenarios[k]['min_price_per_sqm'])/N}"
+                f"Avg time taken for min_price_per_sqm query: {sum(scenarios[k]['min_price_per_sqm']) / N}"
             )
-    
+
     results = [
         {
             "Year": year,
             "Month": month,
             "Town": town,
             "Category": category,
-            "Value": round(value,2),
+            "Value": round(value, 2),
         }
         for category, value in scan_results.items()
     ]
@@ -239,7 +236,7 @@ def main(args):
         writer.writeheader()
         for result in results:
             writer.writerow(result)
- 
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Description of your program")

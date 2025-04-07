@@ -69,7 +69,9 @@ class ResalePriceDataZoneMapCat(ResalePriceData):
     def min_price_query(self, town_position_match):
         min_price = float("inf")
         for i in town_position_match:
-            if self.rearranged_columns["resale_price"][i] < min_price:
+            if self.rearranged_columns["resale_price"][i] == "#NULL":
+                continue
+            elif self.rearranged_columns["resale_price"][i] < min_price:
                 min_price = self.rearranged_columns["resale_price"][i]
         return min_price
 
@@ -89,7 +91,9 @@ class ResalePriceDataZoneMapCat(ResalePriceData):
 
     def sd_price_query(self, town_position_match):
         prices = [
-            self.rearranged_columns["resale_price"][i] for i in town_position_match
+            self.rearranged_columns["resale_price"][i]
+            for i in town_position_match
+            if self.rearranged_columns["resale_price"][i] != "#NULL"
         ]
         if not prices:
             return "No Results"
@@ -116,7 +120,9 @@ class ResalePriceDataZoneMapCat(ResalePriceData):
 
     def avg_price_query(self, town_position_match):
         prices = [
-            self.rearranged_columns["resale_price"][i] for i in town_position_match
+            self.rearranged_columns["resale_price"][i]
+            for i in town_position_match
+            if self.rearranged_columns["resale_price"][i] != "#NULL"
         ]
         if not prices:
             query_res = "No Results"
@@ -144,6 +150,11 @@ class ResalePriceDataZoneMapCat(ResalePriceData):
         min_price_per_sqm = float("inf")
 
         for i in town_position_match:
+            if (
+                self.rearranged_columns["resale_price"][i] != "#NULL"
+                or self.rearranged_columns["floor_area_sqm"][i] != "#NULL"
+            ):
+                continue
             price_per_sqm = (
                 self.rearranged_columns["resale_price"][i]
                 / self.rearranged_columns["floor_area_sqm"][i]

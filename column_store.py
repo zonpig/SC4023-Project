@@ -91,7 +91,9 @@ class ResalePriceData:
     def min_price_query(self, town_position_match):
         min_price = float("inf")
         for i in town_position_match:
-            if self.columns["resale_price"].data[i] < min_price:
+            if self.columns["resale_price"].data[i] == "#NULL":
+                continue
+            elif self.columns["resale_price"].data[i] < min_price:
                 min_price = self.columns["resale_price"].data[i]
         return min_price
 
@@ -110,7 +112,11 @@ class ResalePriceData:
         )
 
     def sd_price_query(self, town_position_match):
-        prices = [self.columns["resale_price"].data[i] for i in town_position_match]
+        prices = [
+            self.columns["resale_price"].data[i]
+            for i in town_position_match
+            if self.columns["resale_price"].data[i] != "#NULL"
+        ]
 
         if not prices:
             query_res = "No Results"
@@ -139,7 +145,11 @@ class ResalePriceData:
 
     def avg_price_query(self, town_position_match):
         # price
-        prices = [self.columns["resale_price"].data[i] for i in town_position_match]
+        prices = [
+            self.columns["resale_price"].data[i]
+            for i in town_position_match
+            if self.columns["resale_price"].data[i] != "#NULL"
+        ]
 
         if not prices:
             query_res = "No Results"
@@ -165,6 +175,11 @@ class ResalePriceData:
     def min_price_per_sqm_query(self, town_position_match):
         min_price_per_sqm = float("inf")
         for i in town_position_match:
+            if (
+                self.rearranged_columns["resale_price"][i] != "#NULL"
+                or self.rearranged_columns["floor_area_sqm"][i] != "#NULL"
+            ):
+                continue
             price_per_sqm = (
                 self.columns["resale_price"].data[i]
                 / self.columns["floor_area_sqm"].data[i]
