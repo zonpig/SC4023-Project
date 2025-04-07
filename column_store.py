@@ -176,8 +176,8 @@ class ResalePriceData:
         min_price_per_sqm = float("inf")
         for i in town_position_match:
             if (
-                self.rearranged_columns["resale_price"][i] != "#NULL"
-                or self.rearranged_columns["floor_area_sqm"][i] != "#NULL"
+                self.columns["resale_price"].data[i] == "#NULL"
+                or self.columns["floor_area_sqm"].data[i] == "#NULL"
             ):
                 continue
             price_per_sqm = (

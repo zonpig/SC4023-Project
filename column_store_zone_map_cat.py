@@ -151,8 +151,8 @@ class ResalePriceDataZoneMapCat(ResalePriceData):
 
         for i in town_position_match:
             if (
-                self.rearranged_columns["resale_price"][i] != "#NULL"
-                or self.rearranged_columns["floor_area_sqm"][i] != "#NULL"
+                self.rearranged_columns["resale_price"][i] == "#NULL"
+                or self.rearranged_columns["floor_area_sqm"][i] == "#NULL"
             ):
                 continue
             price_per_sqm = (
