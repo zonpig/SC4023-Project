@@ -100,41 +100,6 @@ def main(args):
 
     file_path = "ResalePricesSingapore.csv"
 
-    # TODO: This is temporary just for testing out functions
-    column_store_mp = read_csv(file_path, 6)
-    print("month first")
-    start = time.time()
-    min_price = column_store_mp.min_price(year, month, town)
-    end = time.time()
-    print(min_price, "time elapsed: ", end - start)
-
-    start = time.time()
-    min_price = column_store_mp.min_price_modified(year, month, town)
-    end = time.time()
-    print(min_price, "time elapsed: ", end - start)
-
-    start = time.time()
-    min_price = column_store_mp.min_price_chunk(year, month, town)
-    end = time.time()
-    print(min_price, "time elapsed: ", end - start)
-
-    start = time.time()
-    min_price = column_store_mp.min_price_thread(year, month, town)
-    end = time.time()
-    print(min_price, "time elapsed: ", end - start)
-
-    # print("month first")
-    # start = time.time()
-    # min_price = column_store_mp.min_price_month_first(year,month,town)
-    # end = time.time()
-    # print(min_price, 'time elapsed: ', end-start)
-
-    # print("year first")
-    # start = time.time()
-    # min_price = column_store_mp.min_price_year_first(year,month,town)
-    # end = time.time()
-    # print(min_price, 'time elapsed: ', end-start)
-
     # NOTE: Uncomment this for testing avg runtime
     column_store = read_csv(file_path, 0)
     column_store_encoded = read_csv(file_path, 1)
@@ -185,6 +150,8 @@ def main(args):
         },
     }
 
+    scan_results = {}
+
     for _ in tqdm(range(args.num_runs), desc="Running repeated runs of queries."):
         for k in scenarios.keys():
             print(f"Scenario: {k}")
@@ -196,6 +163,9 @@ def main(args):
             scenarios[k]["min_price"] = times
             print(f"Min price: {x}")
 
+            if "min_price" not in scan_results:
+                scan_results["Minimum Price"] = x
+
             start_time = time.time()
             x = scenarios[k]["col_db"].sd_price(year, month, scenarios[k]["town"])
             end_time = time.time()
@@ -204,6 +174,9 @@ def main(args):
             scenarios[k]["sd_price"] = times
             print(f"SD price: {x}")
 
+            if "Standard Deviation of Price" not in scan_results:
+                scan_results["Standard Deviation of Price"] = x
+
             start_time = time.time()
             x = scenarios[k]["col_db"].avg_price(year, month, scenarios[k]["town"])
             end_time = time.time()
@@ -211,6 +184,9 @@ def main(args):
             times.append(end_time - start_time)
             scenarios[k]["avg_price"] = times
             print(f"Avg price: {x}")
+
+            if "Average Price" not in scan_results:
+                scan_results[" Average Price"] = x
 
             start_time = time.time()
             x = scenarios[k]["col_db"].min_price_per_sqm(
@@ -223,25 +199,47 @@ def main(args):
             print(f"Min price per sqm: {x}")
             print()
 
-    # print(f"{args.num_runs} runs concluded!")
-    # print()
-    # if args.aggregation == "mean":
-    #     for k in scenarios.keys():
-    #         print("Scenario: ", k)
-    #         N = args.num_runs
-    #         print(
-    #             f"Avg time taken for min_price query: {sum(scenarios[k]['min_price'])/N}"
-    #         )
-    #         print(
-    #             f"Avg time taken for sd_price query: {sum(scenarios[k]['sd_price'])/N}"
-    #         )
-    #         print(
-    #             f"Avg time taken for avg_price query: {sum(scenarios[k]['avg_price'])/N}"
-    #         )
-    #         print(
-    #             f"Avg time taken for min_price_per_sqm query: {sum(scenarios[k]['min_price_per_sqm'])/N}"
-    #         )
+            if "Minimum Price per Square Meter" not in scan_results:
+                scan_results["Minimum Price per Square Meter"] = x
 
+    print(f"{args.num_runs} runs concluded!")
+    print()
+    if args.aggregation == "mean":
+        for k in scenarios.keys():
+            print("Scenario: ", k)
+            N = args.num_runs
+            print(
+                f"Avg time taken for min_price query: {sum(scenarios[k]['min_price'])/N}"
+            )
+            print(
+                f"Avg time taken for sd_price query: {sum(scenarios[k]['sd_price'])/N}"
+            )
+            print(
+                f"Avg time taken for avg_price query: {sum(scenarios[k]['avg_price'])/N}"
+            )
+            print(
+                f"Avg time taken for min_price_per_sqm query: {sum(scenarios[k]['min_price_per_sqm'])/N}"
+            )
+    
+    results = [
+        {
+            "Year": year,
+            "Month": month,
+            "Town": town,
+            "Category": category,
+            "Value": round(value,2),
+        }
+        for category, value in scan_results.items()
+    ]
+
+    with open(f"ScanResult_{matric_number}.csv", mode="w", newline="") as file:
+        writer = csv.DictWriter(
+            file, fieldnames=["Year", "Month", "Town", "Category", "Value"]
+        )
+        writer.writeheader()
+        for result in results:
+            writer.writerow(result)
+ 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Description of your program")
@@ -250,6 +248,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num_runs", type=int, default=1, help="Number of runs to repeat."
     )
+
     parser.add_argument(
         "--aggregation",
         type=str,
