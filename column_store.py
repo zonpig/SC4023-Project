@@ -36,6 +36,7 @@ class ResalePriceData:
     # Jinyang's
     def add_data(self, row):
         for i, col in enumerate(self.columns.keys()):
+            # print(col, row[i])
             self.columns[col].add_data(row[i])
 
     def __str__(self):
