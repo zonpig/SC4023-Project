@@ -1,17 +1,37 @@
 from collections import defaultdict
+from typing import Union
 
 
 class CategoricalEncoder:
-    def __init__(self, col_name, data):
+    """
+    CategoricalEncoder is a class that encodes categorical variables into numerical values.
+
+    Parameters
+    ----------
+    col_name : str
+        The name of the column to be encoded.
+    data : list
+        The data to be encoded.
+    """
+
+    __slots__ = ("col_name", "mappings")
+
+    def __init__(self, col_name: str, data: list):
         self.col_name = col_name
         self.mappings = self.__fit__(data)
 
-    def __fit__(self, data):
+    def __fit__(self, data: list) -> dict:
+        """
+        This function creates a mapping of unique values to integers.
+        """
         unique_vals = set(data)
-        # e.g. bedok:0
         return {v: k for k, v in enumerate(unique_vals)}
 
-    def transform(self, data):
+    def transform(self, data: Union[str, list]) -> Union[str, list]:
+        """
+        This function transforms the data using the mapping created in the fit method.
+        It can handle both single values and lists of values.
+        """
         if isinstance(data, list):
             return [self.mappings[value] for value in data]
         else:
@@ -23,16 +43,25 @@ class CategoricalEncoder:
 
 
 class ZoneMappingNum:
+    """
+    ZoneMappingNum is a class that creates zones for numerical data.
+    It divides the data into zones based on the number of zones specified.
+
+    Parameters
+    ----------
+    col_name : str
+        The name of the column to be zoned.
+    num_zones : int
+        The number of zones to create.
+    """
+
+    __slots__ = ("col_name", "num_zones", "rows_per_zone", "zones")
+
     def __init__(
         self,
-        col_name,
-        num_zones,
+        col_name: str,
+        num_zones: int,
     ):
-        """
-        Args:
-            col_name: str
-            num_zones: int, number of zones to divide
-        """
         self.col_name = col_name
         self.num_zones = num_zones
         self.rows_per_zone = None
@@ -48,64 +77,19 @@ class ZoneMappingNum:
             zones.append([min_val, max_val])
         self.zones = {k: v for k, v in enumerate(zones)}
 
-class BestZoneMappingNum:
-    def __init__(
-        self,
-        col_name,
-        num_zones,
-    ):
-        """
-        Args:
-            col_name: str
-            num_zones: int, number of zones to divide
-        """
-        self.col_name = col_name
-        self.num_zones = num_zones
-        self.rows_per_zone = None
-        self.zones = {}
-
-    # NOTE: Instead of storing the zones in a dict where key is zone_idx and value is [zone_min, zone_max],
-    # we store the idx range as a string consisting of f'{start_idx}-{end_idx}' and value is [zone_min, zone_max]
-    def fit(self, data):
-        N = len(data)
-        self.rows_per_zone = N // self.num_zones
-        self.zones = {}
-        for i in range(0, N, self.rows_per_zone):
-            start_idx = i
-            end_idx = min(N, i + self.rows_per_zone)
-            zone_vals = data[start_idx : end_idx]
-            min_val, max_val = min(zone_vals), max(zone_vals)
-            self.zones[f'{start_idx}-{end_idx}'] = [min_val,max_val]
 
 class ZoneMappingCat:
-
-    """
-    Takes in the original dataset and sort the zone maps by each categorical value.
-    To provide a common class to zone map and rearrange tables based on a given column name.
-    """
-
-    def __rearrange__(self, column_store, col_name):
-        # print("Running rearrange function")
+    def __rearrange__(self, column_store, col_name: str):
         mapped_col_idxs = {}
 
-        # print("Adding idx to mapped_col_idxs")
         for i, col_val in enumerate(column_store.columns[col_name].data):
             if col_val in mapped_col_idxs:
                 mapped_col_idxs[col_val].append(i)
             else:
                 mapped_col_idxs[col_val] = [i]
 
-        # print("Done adding idx to mapped_col_idxs")
-        # print(f"mapped_col_idx keys: {mapped_col_idxs.keys()}")
-        # print(mapped_col_idxs)
-
-        # STEP: Create an empty dictionary each for each column
         rerranged_column_store = defaultdict(list)
         columns = [k for k in column_store.columns.keys()]
-        # print(f"all columns: {columns}")
-
-        # TODO: we need to store the column store in a dictionary with key being column name and values being the rows
-        # STEP: Iterate through the column store and add to each dict
         for col in columns:
             for unique_col_val in mapped_col_idxs:
                 rerranged_column_store[col].extend(
@@ -114,22 +98,9 @@ class ZoneMappingCat:
                         for idx in mapped_col_idxs[unique_col_val]
                     ]
                 )
-
-        # print(type(rerranged_column_store))
-        # print(f"Testing 1 column of rearranged col store: {rerranged_column_store["floor_area_sqm"]}")
-        # print(f"rerranged_column_store keys: {rerranged_column_store.keys()}")
-
-        # TODO: changing it to an object before returning
-        # (NOT DOING THIS FOR NOW)
-
-        # print("Returned rearranged columns (Currently returning as a dictionary)")
-        # print()
         return mapped_col_idxs, rerranged_column_store
 
     def fit(self, column_store, col_name):
-        """
-        Returns the start and end idx of each zone, and the min and max
-        """
         zone_start_idx = 0
         mapped_col_idxs, rearranged_column_store = self.__rearrange__(
             column_store=column_store, col_name=col_name

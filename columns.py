@@ -10,7 +10,6 @@ class BaseColumn(ABC):
 
 class Month(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: list[dict[str, int]] = []
 
     def add_data(self, val: str):
@@ -25,7 +24,6 @@ class Month(BaseColumn):
 
 class Town(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: List[str] = []
 
     def add_data(self, val: str):
@@ -39,7 +37,6 @@ class Town(BaseColumn):
 
 class TownEncoded(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: List[Union[str, int]] = []
 
     def add_data(self, val: Union[str, int]):
@@ -53,7 +50,6 @@ class TownEncoded(BaseColumn):
 
 class FlatType(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: List[str] = []
 
     def add_data(self, val: str):
@@ -67,7 +63,6 @@ class FlatType(BaseColumn):
 
 class Block(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: List[str] = []
 
     def add_data(self, val: str):
@@ -81,7 +76,6 @@ class Block(BaseColumn):
 
 class StreetName(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: List[str] = []
 
     def add_data(self, val: str):
@@ -95,7 +89,6 @@ class StreetName(BaseColumn):
 
 class StoreyRange(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: List[str] = []
 
     def add_data(self, val: str):
@@ -109,7 +102,6 @@ class StoreyRange(BaseColumn):
 
 class FloorAreaSqm(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: List[float] = []
 
     def add_data(self, val: float):
@@ -123,7 +115,6 @@ class FloorAreaSqm(BaseColumn):
 
 class FlatModel(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: List[str] = []
 
     def add_data(self, val: str):
@@ -137,7 +128,6 @@ class FlatModel(BaseColumn):
 
 class LeaseCommenceDate(BaseColumn):
     def __init__(self):
-        super().__init__()
         self.data: List[int] = []
 
     def add_data(self, val: int):

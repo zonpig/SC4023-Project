@@ -2,7 +2,6 @@ import csv
 import time
 
 from column_preprocess import CategoricalEncoder
-import pandas as pd
 from column_store import ResalePriceData
 
 
@@ -46,9 +45,7 @@ def main():
     }
 
     # matric number
-    matric_number = "U2121223J"  # Darren
-    # matric_number = "U2121763H" #Bryan
-    # matric_number = "U2122055E" #Jin Yang
+    matric_number = "U2121223J"
 
     last_digit_year = int(matric_number[-2])
     year = year_map[last_digit_year]
@@ -66,12 +63,7 @@ def main():
 
     resale_data.encode_town()
 
-    # getting the encoded number of the town, this is what will be passed into our queries
     encoded_town = resale_data.town_encoder.mappings[town]
-
-    # print(town)
-    # print(resale_data.town_encoder.mappings)
-    # print(resale_data.town_encoder.mappings[town])
 
     start_time = time.time()
     min_price = resale_data.min_price(year, month, encoded_town)
@@ -82,13 +74,13 @@ def main():
     start_time = time.time()
     sd_price = resale_data.sd_price(year, month, encoded_town)
     end_time = time.time()
-    print("StdDev price: ", sd_price)
+    print("StdDev price: ", sd_price[0])
     print(f"Time taken for sd_price: {end_time - start_time} seconds")
 
     start_time = time.time()
     avg_price = resale_data.avg_price(year, month, encoded_town)
     end_time = time.time()
-    print("Average price: ", avg_price)
+    print("Average price: ", avg_price[0])
     print(f"Time taken for avg_price: {end_time - start_time} seconds")
 
     start_time = time.time()

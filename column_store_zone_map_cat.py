@@ -278,9 +278,7 @@ def main():
     }
 
     # matric number
-    matric_number = "U2121223J"  # Darren
-    # matric_number = "U2121763H" #Bryan
-    # matric_number = "U2122055E" #Jin Yang
+    matric_number = "U2121223J"
 
     last_digit_year = int(matric_number[-2])
     year = year_map[last_digit_year]
@@ -321,7 +319,7 @@ def main():
     start_time = time.time()
     avg_price = resale_data.avg_price(year, month, town)
     end_time = time.time()
-    print("Average price: ", avg_price)
+    print("Average price: ", avg_price[0])
     print(f"Time taken for avg_price: {end_time - start_time} seconds")
     total_time += end_time - start_time
     print()
@@ -329,7 +327,7 @@ def main():
     start_time = time.time()
     min_price_per_sqm = resale_data.min_price_per_sqm(year, month, town)
     end_time = time.time()
-    print("Minimum price per sqm: ", min_price_per_sqm)
+    print("Minimum price per sqm: ", min_price_per_sqm[0])
     print(f"Time taken for min_price_per_sqm: {end_time - start_time} seconds")
     total_time += end_time - start_time
     print()
