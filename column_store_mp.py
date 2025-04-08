@@ -106,6 +106,7 @@ class ResalePriceDataMP(ResalePriceData):
 
         if not prices:
             query_res = "No Results"
+            mean_price = 0
         else:
             mean_price = sum(prices) / len(prices)
             variance = sum((price - mean_price) ** 2 for price in prices) / (
@@ -113,7 +114,7 @@ class ResalePriceDataMP(ResalePriceData):
             )
             query_res = round(variance**0.5, 2)
 
-        return query_res
+        return query_res, len(prices), mean_price
 
     # Average Price
     def avg_price(self, year, month, town, log_query=False):
@@ -164,7 +165,7 @@ class ResalePriceDataMP(ResalePriceData):
             mean_price = sum(prices) / len(prices)
             query_res = round(mean_price, 2)
 
-        return query_res
+        return query_res, len(prices)
 
     # Minimum Price per Square Meter
     def min_price_per_sqm(self, year, month, town, log_query=False):
