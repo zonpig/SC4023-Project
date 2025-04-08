@@ -278,6 +278,18 @@ def main(args):
                 res.append(x)
                 final_res[k]["min_price_per_sqm"] = res
 
+                start_time = time.time()
+                x = scenarios[k]["col_db"].shared_scan(
+                    year, month, scenarios[k]["town"]
+                )
+                end_time = time.time()
+                times = split_timings[k].get("shared_scan", [])
+                times.append(end_time - start_time)
+                split_timings[k]["shared_scan"] = times
+                res = final_res[k].get("shared_scan", [])
+                res.append(x)
+                final_res[k]["shared_scan"] = res
+
         if not results_calculated:
             original_res = final_res["original"]
             chunk_sizes = [end - start + 1 for start, end in splits]
@@ -287,8 +299,6 @@ def main(args):
                 splits[-1][-1],
                 splits[-1][-1],
             ]
-
-            print(original_res["sd_price"])
 
             keys = [k for k in original_res.keys()]
             for out_idx, k in enumerate(keys):
@@ -326,7 +336,6 @@ def main(args):
             # First calculate the overall mean
             overall_sum = sum(mean * n for _, n, mean in original_res["sd_price"])
             overall_n = sum(n for _, n, _ in original_res["sd_price"])
-            print(original_res["sd_price"])
             overall_mean = overall_sum / overall_n
 
             # Now calculate the total variance

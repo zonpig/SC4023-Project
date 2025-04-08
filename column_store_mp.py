@@ -227,3 +227,49 @@ class ResalePriceDataMP(ResalePriceData):
             query_res = round(min_price_per_sqm, 2)
 
         return query_res
+
+    def shared_scan(self, year, month, town, log_query=False):
+        min_price = float("inf")
+        min_price_per_sqm = float("inf")
+
+        # STEP: Get area
+        area_position_match = parallel_processing(
+            self.columns["floor_area_sqm"].data, criterions={"uni": [(operator.ge, 80)]}
+        )
+        months = [
+            self.columns["month"].data[i]["month"]
+            for i in range(len(self.columns["month"].data))
+        ]
+        years = [
+            self.columns["month"].data[i]["year"]
+            for i in range(len(self.columns["month"].data))
+        ]
+
+        # STEP: Get year
+        year_position_match = parallel_processing(
+            years,
+            matched_idxs=area_position_match,
+            criterions={"uni": [(operator.eq, year)]},
+        )
+        # STEP: Get month
+        month_position_match = parallel_processing(
+            months,
+            matched_idxs=year_position_match,
+            criterions={
+                "or": [
+                    (operator.eq, month),
+                    (operator.eq, month + 1),
+                ]
+            },
+        )
+
+        # STEP: Get town
+        town_position_match = parallel_processing(
+            self.columns["town"].data,
+            matched_idxs=month_position_match,
+            criterions={"uni": [(operator.eq, town)]},
+        )
+
+        query_res = self.shared_scan_query(town_position_match)
+
+        return query_res
