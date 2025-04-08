@@ -198,6 +198,9 @@ def main(args):
             column_store_combined_cat = read_csv(
                 file_path, 5, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
             )
+            column_store_mp = read_csv(
+                file_path, 6, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
+            )
 
             # preprocess
             column_store_encoded.encode_town()
@@ -254,6 +257,10 @@ def main(args):
                     "col_db": column_store_combined_cat,
                     "town": column_store_combined_cat_town,
                 },
+                "vector_at_a_time_with_multiprocessing": {
+                    "col_db": column_store_mp,
+                    "town": town
+                }
             }
 
             for k in scenarios.keys():

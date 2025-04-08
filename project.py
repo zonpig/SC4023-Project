@@ -1,6 +1,7 @@
 import csv
 import time
 import argparse
+import pandas as pd
 from tqdm import tqdm
 from column_store import ResalePriceData
 from column_store_encoded import ResalePriceDataEncoded
@@ -60,11 +61,6 @@ def read_csv(file_path: str, type: int):
             resale_data.add_data(row)
     return resale_data
 
-
-def split_csv(file_path: str):
-    # Find the size of the csv file and see if it can fit into main memory. If it cannot then split the file using the number of rows until the splits can fit into main memory
-
-
 # You are expected to write a program to manage the data in a column-oriented manner,
 # including data storage and processing. Your program should first receive queries, scan
 # the data columns to find matched lines, and compute the results according to associated
@@ -76,7 +72,6 @@ def split_csv(file_path: str):
 # c) the matched town depends on the third last digit of the matriculation number as Table 1 presents;
 # d) there are four query contents in total that are listed in Table 2, and the area requirement (≥80m2) is applicable to all these contents.
 # the area requirement (≥80m2) is applicable to all these contents
-
 
 def main(args):
     # matric number
@@ -91,12 +86,6 @@ def main(args):
     town = town_map[town_index]
 
     file_path = "ResalePricesSingapore.csv"
- 
-    # NOTE: Uncomment this for testing avg runtime
-    
-    splits = split_csv(file_path)
-    
-    
     
     column_store = read_csv(file_path, 0)
     column_store_encoded = read_csv(file_path, 1)
@@ -104,6 +93,7 @@ def main(args):
     column_store_zone_map_cat = read_csv(file_path, 3)
     column_store_combined_num = read_csv(file_path, 4)
     column_store_combined_cat = read_csv(file_path, 5)
+    column_store_mp = read_csv(file_path,6)
 
     # preprocess
     column_store_encoded.encode_town()
@@ -145,6 +135,10 @@ def main(args):
             "col_db": column_store_combined_cat,
             "town": column_store_combined_cat_town,
         },
+        "vector_at_a_time_with_multiprocessing": {
+            "col_db": column_store_mp,
+            "town": town
+        }
     }
 
     scan_results = {}
@@ -172,7 +166,7 @@ def main(args):
             print(f"SD price: {x}")
 
             if "Standard Deviation of Price" not in scan_results:
-                scan_results["Standard Deviation of Price"] = x
+                scan_results["Standard Deviation of Price"] = x[0]
 
             start_time = time.time()
             x = scenarios[k]["col_db"].avg_price(year, month, scenarios[k]["town"])
@@ -183,7 +177,7 @@ def main(args):
             print(f"Avg price: {x}")
 
             if "Average Price" not in scan_results:
-                scan_results[" Average Price"] = x
+                scan_results[" Average Price"] = x[0]
 
             start_time = time.time()
             x = scenarios[k]["col_db"].min_price_per_sqm(

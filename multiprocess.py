@@ -24,6 +24,10 @@ def worker(column, indices, criterions, prev_matched_idxs=None):
             if (prev_matched_idxs is None) or (prev_matched_idxs is not None and idx in prev_matched_idxs):
                 
                 matched = True
+
+                # Check that current data value is not #NULL
+                if column[idx] == "#NULL":
+                    matched = False
                 # Check AND conditions (all conditions must be true)
                 if "and" in criterions:
                     if not all(opt(column[idx], value) for opt, value in criterions["and"]):
