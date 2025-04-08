@@ -7,8 +7,6 @@ from column_store import ResalePriceData
 from column_store_encoded import ResalePriceDataEncoded
 from column_store_zone_map_cat import ResalePriceDataZoneMapCat
 from column_store_zone_map_num import ResalePriceDataZoneMapNum
-from column_store_combined_cat import ResalePriceDataCombinedCat
-from column_store_combined_num import ResalePriceDataCombinedNum
 from column_store_mp import ResalePriceDataMP
 from collections import defaultdict
 import pandas as pd
@@ -56,10 +54,6 @@ def read_csv(
     elif type == 3:
         resale_data = ResalePriceDataZoneMapCat()
     elif type == 4:
-        resale_data = ResalePriceDataCombinedNum()
-    elif type == 5:
-        resale_data = ResalePriceDataCombinedCat()
-    elif type == 6:
         resale_data = ResalePriceDataMP()
 
     nrows = end_idx - start_idx + 1
@@ -98,7 +92,7 @@ def split_csv(file_path: str, max_memory_mb=None, encoding="utf-8"):
     """
     if max_memory_mb is None:
         available_memory = psutil.virtual_memory().available / (1024**2)
-        max_memory_mb = available_memory * 0.1  # use x% of available memory
+        max_memory_mb = available_memory * 0.2  # use x% of available memory
 
     chunk_start = 1
     chunk_memory = 0.0
@@ -141,9 +135,26 @@ def split_csv(file_path: str, max_memory_mb=None, encoding="utf-8"):
 
 def main(args):
     # matric number
-    matric_number = "U2121223J"  # Darren
-    # matric_number = "U2121763H" #Bryan
-    # matric_number = "U2122055E" #Jin Yang
+    if args.matric_number:
+        matric_number = args.matric_number
+    else:
+        # Ask them to choose from the list
+        print("Please choose a matric number from the list:")
+        print("1. U2121223J")
+        print("2. U2121763H")
+        print("3. U2122055E")
+        choice = input("Enter the number corresponding to your choice: ")
+        if choice == "1":
+            matric_number = "U2121223J"
+        elif choice == "2":
+            matric_number = "U2121763H"
+        elif choice == "3":
+            matric_number = "U2122055E"
+        else:
+            # Tell them that default value of
+            # U2121223J will be used
+            print("Invalid choice. Using default value U2121223J.")
+            matric_number = "U2121223J"
 
     last_digit_year = int(matric_number[-2])
     year = year_map[last_digit_year]
@@ -162,8 +173,8 @@ def main(args):
         "categorical_encoded",
         "zone_map_num",
         "zone_map_cat",
-        "combined_num",
-        "combined_cat",
+        "shared_scan",
+        "vector_at_a_time_with_multiprocessing",
     ]
     # Add your keys from the 'scenarios' dictionary
     for key in scenarios:
@@ -191,14 +202,8 @@ def main(args):
             column_store_zone_map_cat = read_csv(
                 file_path, 3, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
             )
-            column_store_combined_num = read_csv(
-                file_path, 4, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
-            )
-            column_store_combined_cat = read_csv(
-                file_path, 5, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
-            )
             column_store_mp = read_csv(
-                file_path, 6, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
+                file_path, 4, start_idx=start_idx, end_idx=end_idx, headers=csv_headers
             )
 
             # preprocess
@@ -216,32 +221,6 @@ def main(args):
 
             column_store_zone_map_cat.create_zone_map("flat_type")
 
-            column_store_combined_num.create_zone_map(16)
-
-            column_store_combined_num.encode_town()
-            if town not in column_store_combined_num.town_encoder.mappings:
-                column_store_combined_num_town = len(
-                    column_store_combined_num.town_encoder.mappings
-                )
-            else:
-                column_store_combined_num_town = (
-                    column_store_combined_num.town_encoder.mappings[town]
-                )
-
-            column_store_combined_cat.create_zone_map(
-                "flat_type"
-            )  # have to zonemap first to create the rearrange columns, then encode town on that rearrange columns
-            column_store_combined_cat.encode_town()
-
-            if town not in column_store_combined_cat.town_encoder.mappings:
-                column_store_combined_cat_town = len(
-                    column_store_combined_cat.town_encoder.mappings
-                )
-            else:
-                column_store_combined_cat_town = (
-                    column_store_combined_cat.town_encoder.mappings[town]
-                )  # get the encoded town value
-
             scenarios = {
                 "original": {"col_db": column_store, "town": town},
                 "categorical_encoded": {
@@ -250,14 +229,6 @@ def main(args):
                 },
                 "zone_map_num": {"col_db": column_store_zone_map_num, "town": town},
                 "zone_map_cat": {"col_db": column_store_zone_map_cat, "town": town},
-                "combined_num": {
-                    "col_db": column_store_combined_num,
-                    "town": column_store_combined_num_town,
-                },
-                "combined_cat": {
-                    "col_db": column_store_combined_cat,
-                    "town": column_store_combined_cat_town,
-                },
                 "vector_at_a_time_with_multiprocessing": {
                     "col_db": column_store_mp,
                     "town": town,
@@ -423,6 +394,11 @@ if __name__ == "__main__":
 
     # Adding arguments
     parser.add_argument(
+        "--matric_number", type=str, help="Matriculation number to be used"
+    )
+
+    # Adding arguments
+    parser.add_argument(
         "--num_runs", type=int, default=1, help="Number of runs to repeat."
     )
 
@@ -432,6 +408,7 @@ if __name__ == "__main__":
         default="mean",
         help="Method to aggregate runs results.",
     )
+
     args = parser.parse_args()
 
     main(args)
