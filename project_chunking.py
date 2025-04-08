@@ -10,8 +10,6 @@ from column_store_zone_map_num import ResalePriceDataZoneMapNum
 from column_store_mp import ResalePriceDataMP
 from collections import defaultdict
 import pandas as pd
-
-import csv
 import sys
 import psutil
 
@@ -92,7 +90,9 @@ def split_csv(file_path: str, max_memory_mb=None, encoding="utf-8"):
     """
     if max_memory_mb is None:
         available_memory = psutil.virtual_memory().available / (1024**2)
-        max_memory_mb = available_memory * 0.2  # use x% of available memory
+        max_memory_mb = (
+            available_memory * args.memory_limit
+        )  # use x% of available memory
 
     chunk_start = 1
     chunk_memory = 0.0
@@ -101,7 +101,7 @@ def split_csv(file_path: str, max_memory_mb=None, encoding="utf-8"):
 
     with open(file_path, mode="r", encoding=encoding) as f:
         reader = csv.reader(f)
-        header = next(reader)  # Skip header
+        _ = next(reader)  # Skip header
         for row in reader:
             row_memory = sys.getsizeof(row) / (1024**2)  # in MB
 
@@ -181,10 +181,11 @@ def main(args):
         final_res[key]  # This will create a default empty dictionary for each key
         time_res[key]
 
-    for _ in tqdm(range(args.num_runs), desc="Running repeated runs of queries."):
-        splits = split_csv(file_path)
-        csv_headers = get_csv_headers(file_path)
+    splits = split_csv(file_path)
+    print(f"Number of split blocks: {len(splits)}")
+    csv_headers = get_csv_headers(file_path)
 
+    for _ in tqdm(range(args.num_runs), desc="Running repeated runs of queries."):
         split_timings = defaultdict(dict)
         for key in scenarios:
             split_timings[key]
@@ -409,6 +410,13 @@ if __name__ == "__main__":
     # Adding arguments
     parser.add_argument(
         "--num_runs", type=int, default=1, help="Number of runs to repeat."
+    )
+
+    parser.add_argument(
+        "--memory_limit",
+        type=float,
+        default=0.1,
+        help="Memory limit in %",
     )
 
     parser.add_argument(
