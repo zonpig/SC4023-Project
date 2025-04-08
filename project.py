@@ -327,10 +327,6 @@ def main(args):
             min_price = min(original_res["min_price"])
 
             # STEP: Determine sd
-            # sd_price = np.sqrt(
-            #     sum((stdev**2) * row_used for stdev, row_used in original_res["sd_price"])
-            #     / sum(row_used for _, row_used in original_res["sd_price"])
-            # )
             numerator = 0
             total_n = 0
 
