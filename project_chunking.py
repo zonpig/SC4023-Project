@@ -98,7 +98,7 @@ def split_csv(file_path: str, max_memory_mb=None, encoding="utf-8"):
     """
     if max_memory_mb is None:
         available_memory = psutil.virtual_memory().available / (1024**2)
-        max_memory_mb = available_memory * 0.10  # use x% of available memory
+        max_memory_mb = available_memory * 0.1  # use x% of available memory
 
     chunk_start = 1
     chunk_memory = 0.0
@@ -153,10 +153,10 @@ def main(args):
 
     file_path = "ResalePricesSingapore.csv"
 
-    final_res = defaultdict(dict) # store results of each chunk
-    time_res = defaultdict(dict) # store time taken for each run
+    final_res = defaultdict(dict)  # store results of each chunk
+    time_res = defaultdict(dict)  # store time taken for each run
     results_calculated = False
-    
+
     scenarios = [
         "original",
         "categorical_encoded",
@@ -171,10 +171,9 @@ def main(args):
         time_res[key]
 
     for _ in tqdm(range(args.num_runs), desc="Running repeated runs of queries."):
-        
         splits = split_csv(file_path)
         csv_headers = get_csv_headers(file_path)
-        
+
         split_timings = defaultdict(dict)
         for key in scenarios:
             split_timings[key]
@@ -205,7 +204,9 @@ def main(args):
             # preprocess
             column_store_encoded.encode_town()
             if town not in column_store_encoded.town_encoder.mappings:
-                column_store_encode_town = len(column_store_encoded.town_encoder.mappings)
+                column_store_encode_town = len(
+                    column_store_encoded.town_encoder.mappings
+                )
             else:
                 column_store_encode_town = column_store_encoded.town_encoder.mappings[
                     town
@@ -259,8 +260,8 @@ def main(args):
                 },
                 "vector_at_a_time_with_multiprocessing": {
                     "col_db": column_store_mp,
-                    "town": town
-                }
+                    "town": town,
+                },
             }
 
             for k in scenarios.keys():
@@ -268,8 +269,8 @@ def main(args):
                 x = scenarios[k]["col_db"].min_price(year, month, scenarios[k]["town"])
                 end_time = time.time()
                 times = split_timings[k].get("min_price", [])
-                times.append(end_time-start_time)
-                split_timings[k]['min_price'] = times
+                times.append(end_time - start_time)
+                split_timings[k]["min_price"] = times
                 res = final_res[k].get("min_price", [])
                 res.append(x)
                 final_res[k]["min_price"] = res
@@ -278,8 +279,8 @@ def main(args):
                 x = scenarios[k]["col_db"].sd_price(year, month, scenarios[k]["town"])
                 end_time = time.time()
                 times = split_timings[k].get("sd_price", [])
-                times.append(end_time-start_time)
-                split_timings[k]['sd_price'] = times
+                times.append(end_time - start_time)
+                split_timings[k]["sd_price"] = times
                 res = final_res[k].get("sd_price", [])
                 res.append(x)
                 final_res[k]["sd_price"] = res
@@ -288,8 +289,8 @@ def main(args):
                 x = scenarios[k]["col_db"].avg_price(year, month, scenarios[k]["town"])
                 end_time = time.time()
                 times = split_timings[k].get("avg_price", [])
-                times.append(end_time-start_time)
-                split_timings[k]['avg_price'] = times
+                times.append(end_time - start_time)
+                split_timings[k]["avg_price"] = times
                 res = final_res[k].get("avg_price", [])
                 res.append(x)
                 final_res[k]["avg_price"] = res
@@ -300,98 +301,106 @@ def main(args):
                 )
                 end_time = time.time()
                 times = split_timings[k].get("min_price_per_sqm", [])
-                times.append(end_time-start_time)
-                split_timings[k]['min_price_per_sqm'] = times
+                times.append(end_time - start_time)
+                split_timings[k]["min_price_per_sqm"] = times
                 res = final_res[k].get("min_price_per_sqm", [])
                 res.append(x)
                 final_res[k]["min_price_per_sqm"] = res
 
-            if not results_calculated:
-                original_res = final_res["original"]
-                chunk_sizes = [end - start + 1 for start, end in splits]
-                total_size = [splits[-1][-1], splits[-1][-1], splits[-1][-1], splits[-1][-1]]
+        if not results_calculated:
+            original_res = final_res["original"]
+            chunk_sizes = [end - start + 1 for start, end in splits]
+            total_size = [
+                splits[-1][-1],
+                splits[-1][-1],
+                splits[-1][-1],
+                splits[-1][-1],
+            ]
 
-                keys = [k for k in original_res.keys()]
-                for out_idx, k in enumerate(keys):
-                    cpy = original_res[k].copy()
-                    cur_list = []
-                    for idx, val in enumerate(cpy):
-                        if isinstance(val, tuple):
-                            if len(val) == 2:
-                                _, row_used = val
-                            elif len(val) == 3:
-                                _, row_used, _ = val
-                            if row_used == 0:
-                                total_size[out_idx] -= chunk_sizes[idx]
-                                continue
-                            else:
-                                cur_list.append(val)
-                        elif val == "No Results":
+            print(original_res["sd_price"])
+
+            keys = [k for k in original_res.keys()]
+            for out_idx, k in enumerate(keys):
+                cpy = original_res[k].copy()
+                cur_list = []
+                for idx, val in enumerate(cpy):
+                    if isinstance(val, tuple):
+                        if len(val) == 2:
+                            _, row_used = val
+                        elif len(val) == 3:
+                            _, row_used, _ = val
+                        if row_used == 0:
                             total_size[out_idx] -= chunk_sizes[idx]
+                            continue
                         else:
                             cur_list.append(val)
+                    elif val == "No Results":
+                        total_size[out_idx] -= chunk_sizes[idx]
+                    else:
+                        cur_list.append(val)
 
-                    original_res[k] = cur_list
+                original_res[k] = cur_list
 
-                # STEP: Determine min price
-                min_price = min(original_res["min_price"])
+            # STEP: Determine min price
+            min_price = min(original_res["min_price"])
 
-                # STEP: Determine sd
-                # sd_price = np.sqrt(
-                #     sum((stdev**2) * row_used for stdev, row_used in original_res["sd_price"])
-                #     / sum(row_used for _, row_used in original_res["sd_price"])
-                # )
-                numerator = 0
-                total_n = 0
+            # STEP: Determine sd
+            # sd_price = np.sqrt(
+            #     sum((stdev**2) * row_used for stdev, row_used in original_res["sd_price"])
+            #     / sum(row_used for _, row_used in original_res["sd_price"])
+            # )
+            numerator = 0
+            total_n = 0
 
-                # First calculate the overall mean
-                overall_sum = sum(mean * n for _, n, mean in original_res["sd_price"])
-                overall_n = sum(n for _, n, _ in original_res["sd_price"])
-                overall_mean = overall_sum / overall_n
+            # First calculate the overall mean
+            overall_sum = sum(mean * n for _, n, mean in original_res["sd_price"])
+            overall_n = sum(n for _, n, _ in original_res["sd_price"])
+            print(original_res["sd_price"])
+            overall_mean = overall_sum / overall_n
 
-                # Now calculate the total variance
-                for sd, n, mean in original_res["sd_price"]:
-                    numerator += (n - 1) * (sd**2) + n * ((mean - overall_mean) ** 2)
-                    total_n += n
+            # Now calculate the total variance
+            for sd, n, mean in original_res["sd_price"]:
+                numerator += (n - 1) * (sd**2) + n * ((mean - overall_mean) ** 2)
+                total_n += n
 
-                combined_variance = numerator / (total_n - 1)
-                sd_price = np.sqrt(combined_variance)
+            combined_variance = numerator / (total_n - 1)
+            sd_price = np.sqrt(combined_variance)
 
-                # STEP: Determine average
-                avg_price = sum(
-                    avg * row_used for avg, row_used in original_res["avg_price"]
-                ) / sum(row_used for _, row_used in original_res["avg_price"])
+            # STEP: Determine average
+            avg_price = sum(
+                avg * row_used for avg, row_used in original_res["avg_price"]
+            ) / sum(row_used for _, row_used in original_res["avg_price"])
 
-                # STEP: Determine min_price_per_sqm
-                min_price_per_sqm = min(original_res["min_price_per_sqm"])
+            # STEP: Determine min_price_per_sqm
+            min_price_per_sqm = min(original_res["min_price_per_sqm"])
 
-                scan_results = {
-                    "Minimum Price": min_price,
-                    "Standard Deviation of Price": sd_price,
-                    "Average Price": avg_price,
-                    "Minimum Price per Square Meter": min_price_per_sqm,
+            scan_results = {
+                "Minimum Price": min_price,
+                "Standard Deviation of Price": sd_price,
+                "Average Price": avg_price,
+                "Minimum Price per Square Meter": min_price_per_sqm,
+            }
+
+            results = [
+                {
+                    "Year": year,
+                    "Month": month,
+                    "Town": town,
+                    "Category": category,
+                    "Value": round(value, 2),
                 }
+                for category, value in scan_results.items()
+            ]
 
-                results = [
-                    {
-                        "Year": year,
-                        "Month": month,
-                        "Town": town,
-                        "Category": category,
-                        "Value": round(value, 2),
-                    }
-                    for category, value in scan_results.items()
-                ]
+            with open(f"ScanResult_{matric_number}.csv", mode="w", newline="") as file:
+                writer = csv.DictWriter(
+                    file, fieldnames=["Year", "Month", "Town", "Category", "Value"]
+                )
+                writer.writeheader()
+                for result in results:
+                    writer.writerow(result)
+            results_calculated = True
 
-                with open(f"ScanResult_{matric_number}.csv", mode="w", newline="") as file:
-                    writer = csv.DictWriter(
-                        file, fieldnames=["Year", "Month", "Town", "Category", "Value"]
-                    )
-                    writer.writeheader()
-                    for result in results:
-                        writer.writerow(result)
-                results_calculated = True
-       
         # consolidate the timings
         for scenario in split_timings.keys():
             for query, query_runtimes in split_timings[scenario].items():
@@ -407,6 +416,7 @@ def main(args):
             N = args.num_runs
             for q in time_res[k].keys():
                 print(f"Avg time taken for {q} query: {sum(time_res[k][q]) / N}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Description of your program")
