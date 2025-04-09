@@ -1,9 +1,9 @@
 import csv
 import operator
-from query import Query
 
 from column_store import ResalePriceData
 from multiprocess import parallel_processing
+from query import Query
 
 
 class ResalePriceDataMP(ResalePriceData):

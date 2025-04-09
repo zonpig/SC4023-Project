@@ -1,5 +1,4 @@
 import csv
-import time
 
 from column_preprocess import ZoneMappingNum
 from column_store import ResalePriceData

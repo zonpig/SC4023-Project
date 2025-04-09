@@ -1,5 +1,5 @@
-from typing import List, Union
 from abc import ABC, abstractmethod
+from typing import List, Union
 
 
 class BaseColumn(ABC):

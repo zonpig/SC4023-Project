@@ -1,5 +1,6 @@
-import time
 import multiprocessing
+import time
+
 import numpy as np
 
 

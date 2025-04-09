@@ -1,7 +1,8 @@
 import csv
-from query import Query
+
 from column_preprocess import CategoricalEncoder
 from column_store import ResalePriceData
+from query import Query
 
 
 class ResalePriceDataEncoded(ResalePriceData):

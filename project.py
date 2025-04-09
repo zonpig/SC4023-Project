@@ -1,17 +1,19 @@
-import csv
-import time
 import argparse
+import csv
+import sys
+import time
+from collections import defaultdict
+
 import numpy as np
+import pandas as pd
+import psutil
 from tqdm import tqdm
+
 from column_store import ResalePriceData
 from column_store_encoded import ResalePriceDataEncoded
+from column_store_mp import ResalePriceDataMP
 from column_store_zone_map_cat import ResalePriceDataZoneMapCat
 from column_store_zone_map_num import ResalePriceDataZoneMapNum
-from column_store_mp import ResalePriceDataMP
-from collections import defaultdict
-import pandas as pd
-import sys
-import psutil
 
 town_map = {
     0: "BEDOK",
@@ -168,7 +170,7 @@ def main(args):
     time_res = defaultdict(dict)  # store time taken for each run
     results_calculated = False
 
-    scenarios = [
+    test_scenarios = [
         "original",
         "categorical_encoded",
         "zone_map_num",
@@ -176,9 +178,9 @@ def main(args):
         "shared_scan",
         "vector_at_a_time_with_multiprocessing",
     ]
-    # Add your keys from the 'scenarios' dictionary
-    for key in scenarios:
-        final_res[key]  # This will create a default empty dictionary for each key
+
+    for key in test_scenarios:
+        final_res[key]
         time_res[key]
 
     splits = split_csv(file_path)
@@ -187,7 +189,7 @@ def main(args):
 
     for _ in tqdm(range(args.num_runs), desc="Running repeated runs of queries."):
         split_timings = defaultdict(dict)
-        for key in scenarios:
+        for key in test_scenarios:
             split_timings[key]
 
         for start_idx, end_idx in splits:
@@ -330,12 +332,12 @@ def main(args):
             numerator = 0
             total_n = 0
 
-            # First calculate the overall mean
+            # calculate the overall mean
             overall_sum = sum(mean * n for _, n, mean in original_res["sd_price"])
             overall_n = sum(n for _, n, _ in original_res["sd_price"])
             overall_mean = overall_sum / overall_n
 
-            # Now calculate the total variance
+            # calculate the total variance
             for sd, n, mean in original_res["sd_price"]:
                 numerator += (n - 1) * (sd**2) + n * ((mean - overall_mean) ** 2)
                 total_n += n

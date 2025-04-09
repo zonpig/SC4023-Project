@@ -1,5 +1,6 @@
-import pandas as pd
 import time
+
+import pandas as pd
 
 
 class Query:
@@ -15,8 +16,6 @@ class Query:
         price_query,
         log_query=False,
     ):
-        """ """
-
         rows_scanned = [0] * 4
         col_idx = 0
 

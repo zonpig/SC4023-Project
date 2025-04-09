@@ -1,18 +1,17 @@
 import csv
 
 from columns import (
-    Month,
-    Town,
-    FlatType,
     Block,
-    StreetName,
-    StoreyRange,
-    FloorAreaSqm,
     FlatModel,
+    FlatType,
+    FloorAreaSqm,
     LeaseCommenceDate,
+    Month,
     ResalePrice,
+    StoreyRange,
+    StreetName,
+    Town,
 )
-
 from query import Query
 
 
