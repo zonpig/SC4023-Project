@@ -14,7 +14,7 @@ This project implements a columnar data store for analyzing resale price data in
   - **Zone Mapping**: Divides data into zones for faster filtering.
   - **Categorical Encoding**: Encodes categorical data for efficient processing.
   - **Multiprocessing**: Parallelizes query operations to leverage multiple CPU cores.
-- **Shared Scan**: Combines multiple queries into a single scan to reduce redundant computations.
+  - **Shared Scan**: Combines multiple queries into a single scan to reduce redundant computations.
 
 ## File Structure
 
@@ -25,11 +25,9 @@ This project implements a columnar data store for analyzing resale price data in
 
 ### Optimizations
 
-- **`column_store_zone_map_num.py`**: Implements zone mapping for numerical columns.
-- **`column_store_zone_map_cat.py`**: Implements zone mapping for categorical columns.
-- **`column_store_encoded.py`**: Adds categorical encoding for columns like `Town`.
-- **`column_store_combined_num.py`**: Combines zone mapping (numerical) and categorical encoding.
-- **`column_store_combined_cat.py`**: Combines zone mapping (categorical) and categorical encoding.
+- **`column_store_encoded.py`**: Adds categorical encoding for columns to `Town`.
+- **`column_store_zone_map_num.py`**: Implements zone mapping for area column.
+- **`column_store_zone_map_cat.py`**: Implements zone mapping for FlatModel columns based on area column.
 - **`column_store_mp.py`**: Implements multiprocessing for query operations.
 
 ### Utilities
@@ -38,7 +36,7 @@ This project implements a columnar data store for analyzing resale price data in
 
 ### Query Execution
 
-- **`query.py`**: (Not included in the provided files) Presumably handles query orchestration and execution.
+- **`query.py`**: Provides Query class to handle query function for the columns.
 
 ## How to Run
 
@@ -46,20 +44,20 @@ This project implements a columnar data store for analyzing resale price data in
      - Place the dataset file (`ResalePricesSingapore.csv`) in the project directory.
 
 2. **Run the Main Scripts**:
-     - Each script contains a `main()` function that demonstrates the functionality of the respective implementation.
+     - To run all comparisons, execute the `project.py` script. This script will run all the implementations and print the results for each.
      - Example:
 
          ```bash
-         python column_store.py
+         python project.py
          ```
 
 3. **Choose an Optimization**:
-     - To test specific optimizations, run the corresponding script:
-         - Zone Mapping (Numerical): `column_store_zone_map_num.py`
-         - Zone Mapping (Categorical): `column_store_zone_map_cat.py`
-         - Categorical Encoding: `column_store_encoded.py`
-         - Combined Optimizations: `column_store_combined_num.py` or `column_store_combined_cat.py`
-         - Multiprocessing: `column_store_mp.py`
+     - To test specific type of column store, run the corresponding script:
+        - Original: `column_store.py`
+        - Categorical Encoding: `column_store_encoded.py`
+        - Zone Mapping (Numerical): `column_store_zone_map_num.py`
+        - Zone Mapping (Categorical): `column_store_zone_map_cat.py`
+        - Multiprocessing: `column_store_mp.py`
 
 ## Example Output
 
@@ -86,11 +84,6 @@ Time taken for min_price_per_sqm: 0.13 seconds
 
 ## Dependencies
 
-- Python 3.8+
-- Required libraries:
-  - `pandas`
-  - `multiprocessing`
-
 Install dependencies using venv:
 
 ```bash
@@ -106,12 +99,6 @@ source venv/bin/activate
 # Install required packages
 pip install -r requirements.txt
 ```
-
-## Future Improvements
-
-- Add support for more complex queries.
-- Optimize memory usage for large datasets.
-- Implement additional indexing techniques for faster lookups.
 
 ## Contributors
 
