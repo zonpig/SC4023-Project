@@ -20,7 +20,6 @@ class ResalePriceDataZoneMapCat(ResalePriceData):
         # start with area
         area_position_match = []
         # iterate through area position zones\
-        print(self.zone_mapping)
         for v in self.zone_mapping.values():
             zone_max_val = v["zone_max"]
             zone_start_idx = v["start_idx"]
